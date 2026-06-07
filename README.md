@@ -57,8 +57,3 @@ Upstream scripts that produced the data — these require Modal GPUs and OpenRou
 - `judge_vea.py` — core F1 VEA judge (the exact rubric + CoT extraction); imported by the others.
 - `judge_pretrain_vea.py` — VEA judging of the pretraining rollouts (Gemini-2.5-flash).
 - `analyze_vea_position*.py`, `refine_vea_first_token.py` — first-VEA-token location (Gemini earliest-span + exact OLMo-3 tokenizer).
-
-## Caveats (see post §Limitations)
-- **Clustered CIs.** Rollouts are nested in prompts (ICC ≈ 0.45); error bars in Figs 1–2 are by-prompt cluster-bootstrap 95% CIs, not naive Wald. Trends survive; fine checkpoint-to-checkpoint differences may not.
-- **Judge consistency.** `gpt-5-mini` (RLVR, SFT, DPO), `claude-haiku-4.5` (BASE, refusal), `google/gemini-2.5-flash` (pretraining). Cross-judge comparisons (BASE vs others; pretraining vs post-training) are reference-only.
-- **Pretraining context.** stage1 checkpoints have a native 8192 context (post-trained models are extended to 20480) and emit no stop token, so the pretraining sweep used a 2048-token cap; VEA is verbalized early so this does not bias detection.
