@@ -1,0 +1,20 @@
+# python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# latex build artifacts
+*.aux
+*.log
+*.out
+*.toc
+*.synctex.gz
+*.fls
+*.fdb_latexmk
+
+# inspect / misc logs
+*.eval
+logs/
+logs_smoke/
+.DS_Store
