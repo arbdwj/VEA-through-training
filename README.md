@@ -43,6 +43,7 @@ cd scripts && ../.venv/bin/python fig1_pretrain_vea.py
 | 5 | Within-question eval-gaming (Fortress) | `fig5_within_question_eval_gaming.py` | `refusal_haiku.jsonl` |
 | 6 | When the first VEA token appears | `fig6_vea_position_in_cot.py` | `vea_first_token.csv` |
 | 7 | First-VEA-token by benchmark | `fig7_first_vea_by_benchmark.py` | `vea_first_token.csv` |
+| 8 | VEA rollouts: refused vs complied + eval-gaming gap, over RLVR | `fig8_vea_eval_gaming_split.py` | `refusal_haiku.jsonl` |
 
 ## Data
 - `*_vea*.jsonl` — per-rollout VEA judgments (`step`, `benchmark`, `prompt_id`, `rollout_id`, `ok`, `vea`, `quote`).
