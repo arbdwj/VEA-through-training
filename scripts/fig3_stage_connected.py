@@ -118,11 +118,13 @@ def main():
     ticks = [base_x, x_sft[sft_steps[0]], x_sft[sft_steps[len(sft_steps)//2]], x_sft[sft_steps[-1]],
              x_dpo,
              x_rlvr[rlvr_steps[0]], x_rlvr[rlvr_steps[len(rlvr_steps)//2]], x_rlvr[rlvr_steps[-1]]]
-    labels = ["0", f"{sft_steps[0]}", f"{sft_steps[len(sft_steps)//2]}", f"{sft_steps[-1]}",
-              "DPO", f"{rlvr_steps[0]}", f"{rlvr_steps[len(rlvr_steps)//2]}", f"{rlvr_steps[-1]}"]
+    def _pl(s, final):
+        return f"{s}\n{100*s/final:.0f}%"
+    labels = ["0", _pl(sft_steps[0], 10000), _pl(sft_steps[len(sft_steps)//2], 10000), _pl(sft_steps[-1], 10000),
+              "DPO", _pl(rlvr_steps[0], 2300), _pl(rlvr_steps[len(rlvr_steps)//2], 2300), _pl(rlvr_steps[-1], 2300)]
     ax.set_xticks(ticks)
-    ax.set_xticklabels(labels)
-    ax.set_xlabel("post-training step  (within each stage; stages are sequential, not to scale)")
+    ax.set_xticklabels(labels, fontsize=8)
+    ax.set_xlabel("post-training step  (% = of that stage's final step; stages sequential, not to scale)")
     ax.set_ylabel("VEA rate (% of rollouts)")
     ax.grid(alpha=.25, axis="y")
     ax.legend(title="benchmark", loc="upper right", fontsize=9)

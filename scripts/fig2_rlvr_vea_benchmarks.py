@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 
 import _paths as P
 from _stats import cluster_ci
+from _axes import pct_top_axis
 
 LABELS = {"fortress": "Fortress", "jbb": "JailbreakBench", "harmfulqa": "HarmfulQA",
           "agentharm": "AgentHarm", "advbench": "AdvBench"}
@@ -57,6 +58,7 @@ def main():
     ax.grid(True, alpha=0.3)
     ax.set_ylim(bottom=0)
     ax.legend(fontsize=8)
+    pct_top_axis(ax, 2300, label="% of final RLVR step (2300)")
     fig.tight_layout()
     fig.savefig(P.f("fig2_rlvr_vea_benchmarks.png"), dpi=140)
     print("saved ->", P.f("fig2_rlvr_vea_benchmarks.png"))

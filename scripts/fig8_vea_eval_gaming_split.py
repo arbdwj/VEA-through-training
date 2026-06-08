@@ -17,6 +17,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 import _paths as P
+from _axes import step_pct_labels
 
 R = [json.loads(l) for l in open(P.d("refusal_haiku.jsonl"))]
 R = [r for r in R if r.get("stage") == "rlvr" and r.get("ok") and not r.get("no_answer")
@@ -46,8 +47,8 @@ for i in range(len(steps)):
     a.text(x[i], tot + 25, f"{vea_rate[i]:.0f}% refused", ha="center", fontsize=9, weight="bold")
     a.text(x[i], vea_ref[i] / 2, str(vea_ref[i]), ha="center", va="center", color="white", fontsize=9)
     a.text(x[i], vea_ref[i] + vea_comp[i] / 2, str(vea_comp[i]), ha="center", va="center", fontsize=8)
-a.set_xticks(x); a.set_xticklabels(steps)
-a.set_xlabel("RLVR training step"); a.set_ylabel("VEA-positive rollouts")
+a.set_xticks(x); a.set_xticklabels(step_pct_labels(steps, 2300), fontsize=8)
+a.set_xlabel("RLVR training step  (% of final, 2300)"); a.set_ylabel("VEA-positive rollouts")
 a.set_ylim(0, max(np.array(vea_ref) + np.array(vea_comp)) * 1.15)
 a.set_title("(A) Of rollouts that verbalize eval-awareness, how many then refuse?")
 a.legend(fontsize=8, loc="upper left"); a.grid(alpha=0.25, axis="y")
@@ -59,8 +60,8 @@ b.plot(x, nonvea_rate, "s-", color="tab:blue", lw=2.2, ms=8, label="refuse | non
 for i in range(len(steps)):
     b.annotate(f"+{vea_rate[i]-nonvea_rate[i]:.0f}", (x[i], (vea_rate[i]+nonvea_rate[i])/2),
                ha="center", va="center", fontsize=9, color="darkorange", weight="bold")
-b.set_xticks(x); b.set_xticklabels(steps)
-b.set_xlabel("RLVR training step"); b.set_ylabel("refusal rate (%)")
+b.set_xticks(x); b.set_xticklabels(step_pct_labels(steps, 2300), fontsize=8)
+b.set_xlabel("RLVR training step  (% of final, 2300)"); b.set_ylabel("refusal rate (%)")
 b.set_ylim(0, 100)
 b.set_title("(B) Is it eval-gaming or baseline safety? VEA vs non-VEA refusal (pooled = upper bound)")
 b.legend(fontsize=8, loc="center right"); b.grid(alpha=0.25)

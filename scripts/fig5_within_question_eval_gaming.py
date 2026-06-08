@@ -15,6 +15,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 import _paths as P
+from _axes import pct_top_axis
 
 MIN = 2
 
@@ -64,6 +65,8 @@ def main():
                         ha="center", fontsize=7, color="tab:red")
         ax.set_title(title, fontsize=12); ax.set_ylabel("refusal rate (%)")
         ax.set_ylim(0, 100); ax.grid(alpha=.3); ax.set_xlabel("training step")
+        pct_top_axis(ax, 10000 if stage == "sft" else 2300,
+                     label=f"% of final {stage.upper()} step ({'10k' if stage=='sft' else '2300'})")
     axes[0].legend(loc="center right", fontsize=8)
     fig.suptitle("WITHIN-question eval-gaming trend on Fortress  (questions that elicit VEA)\n"
                  "per-question refuse|VEA vs refuse|non-VEA, ≥2/≥2 rollouts · OLMo-3 32B Think · "

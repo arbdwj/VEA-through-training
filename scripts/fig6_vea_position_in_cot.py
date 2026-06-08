@@ -17,6 +17,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 import _paths as P
+from _axes import step_pct_labels
 
 step, ft, clen, frac = [], [], [], []
 with open(P.d("vea_first_token.csv")) as f:
@@ -66,7 +67,8 @@ steps = sorted(set(step.tolist()))
 mt = [np.median(ft[step == s]) for s in steps]
 mf = [np.median(frac[step == s]) for s in steps]
 c.plot(steps, mt, "s-", color="tab:green", lw=2)
-c.set_xlabel("RLVR training step"); c.set_ylabel("median first VEA token", color="tab:green")
+c.set_xticks(steps); c.set_xticklabels(step_pct_labels(steps, 2300), fontsize=7)
+c.set_xlabel("RLVR training step  (% of final, 2300)"); c.set_ylabel("median first VEA token", color="tab:green")
 c.tick_params(axis="y", labelcolor="tab:green"); c.set_ylim(0, 320)
 c2 = c.twinx()
 c2.plot(steps, mf, "o--", color="tab:purple", lw=2)

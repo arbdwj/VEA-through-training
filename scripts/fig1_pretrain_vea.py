@@ -18,6 +18,7 @@ import matplotlib.pyplot as plt
 
 import _paths as P
 from _stats import cluster_ci
+from _axes import pct_top_axis
 
 BASE_MAIN_VEA = 8.84
 
@@ -81,6 +82,7 @@ def main():
     ax.set_title("VEA is essentially absent during pretraining — it is installed by post-training\n"
                  "Olmo-3-1125-32B stage1 checkpoints · 444 prompts × 8 rollouts · 2048-tok cap · "
                  "Gemini-2.5-flash F1 · by-prompt bootstrap CIs", fontsize=10.5)
+    pct_top_axis(ax, 656000, thousands=True, label="% of final pretraining step (656k)")
     fig.tight_layout()
     fig.savefig(P.f("fig1_pretrain_vea.png"), dpi=140)
     print("saved ->", P.f("fig1_pretrain_vea.png"))
