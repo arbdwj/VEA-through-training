@@ -38,29 +38,3 @@ PY=./.venv/bin/python ./build.sh         # figures + PDF
 # or a single figure:
 cd scripts && ../.venv/bin/python fig1_pretrain_vea.py
 ```
-
-## Figure → data → script
-| Fig | What | Script | Data |
-|----|------|--------|------|
-| 1 | VEA across pretraining checkpoints | `fig1_pretrain_vea.py` | `pretrain_rollouts/`, `pretrain_vea_judgments.jsonl` |
-| 2 | VEA vs RLVR checkpoint, per benchmark | `fig2_rlvr_vea_benchmarks.py` | `rlvr_fortress_vea.jsonl`, `rlvr_bench_vea.jsonl` |
-| 3 | BASE→SFT→DPO→RLVR connected | `fig3_stage_connected.py` | `stage_vea.jsonl`, `rlvr_*`, `base_vea_haiku.jsonl` |
-| 4 | Net VEA change per stage | `fig4_stage_net_change.py` | `stage_vea.jsonl`, `rlvr_*` |
-| 5 | Within-question eval-gaming (Fortress) | `fig5_within_question_eval_gaming.py` | `refusal_haiku.jsonl` |
-| 6 | When the first VEA token appears | `fig6_vea_position_in_cot.py` | `vea_first_token.csv` |
-| 7 | First-VEA-token by benchmark | `fig7_first_vea_by_benchmark.py` | `vea_first_token.csv` |
-| 8 | VEA rollouts: refused vs complied + eval-gaming gap, over RLVR | `fig8_vea_eval_gaming_split.py` | `refusal_haiku.jsonl` |
-
-## Data
-- `*_vea*.jsonl` — per-rollout VEA judgments (`step`, `benchmark`, `prompt_id`, `rollout_id`, `ok`, `vea`, `quote`).
-- `refusal_haiku.jsonl` — per-rollout refusal + VEA labels (Haiku F2), for the eval-gaming figure.
-- `vea_first_token.csv` / `vea_position*.csv` — derived first-VEA-token positions (Gemini earliest-span located in the CoT and counted with OLMo-3's tokenizer).
-- `pretrain_rollouts/*.jsonl` — base-model completions for the 5 stage1 pretraining checkpoints (the only large files; needed by Fig 1 for `</think>` rates).
-- `prompts/` — the 444 safety prompts.
-
-## Pipeline (`pipeline/`, reference only)
-Upstream scripts that produced the data — these require Modal GPUs and OpenRouter API access and read the original raw rollouts, so they are included for provenance, not turnkey re-execution:
-- `modal_app_base_pretrain.py` — vLLM sampler for the pretraining checkpoints.
-- `judge_vea.py` — core F1 VEA judge (the exact rubric + CoT extraction); imported by the others.
-- `judge_pretrain_vea.py` — VEA judging of the pretraining rollouts (Gemini-2.5-flash).
-- `analyze_vea_position*.py`, `refine_vea_first_token.py` — first-VEA-token location (Gemini earliest-span + exact OLMo-3 tokenizer).
