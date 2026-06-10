@@ -62,30 +62,22 @@ def main():
                 color="tab:red", label="VEA | produced a CoT  (judged rollouts)", zorder=5)
     ax.errorbar(x, all_rate, yerr=all_err, marker="s", ms=7, lw=2.0, capsize=3,
                 color="tab:blue", alpha=0.8, label="VEA | all rollouts  (no-CoT = False)", zorder=4)
-    ax.axhline(BASE_MAIN_VEA, color="gray", ls="--", lw=1.6, alpha=0.8)
-    ax.annotate(f"released base `main` ≈ {BASE_MAIN_VEA:.1f}%\n"
-                "(end of pretraining; Haiku judge, 20480 ctx — reference only)",
-                xy=(x[-1], BASE_MAIN_VEA), xytext=(x[0] + 20, BASE_MAIN_VEA + 0.6),
-                fontsize=8.5, color="dimgray", va="bottom")
-    ax.annotate("→ post-training (SFT) installs VEA, lifting it further",
-                xy=(x[-1], BASE_MAIN_VEA), xytext=(x[0] + 20, BASE_MAIN_VEA - 1.3),
-                fontsize=8.5, color="dimgray", style="italic")
     for xi, cr, tr in zip(x, cot_rate, think_rate):
         ax.annotate(f"{tr:.0f}%\n</think>", (xi, cr), textcoords="offset points",
-                    xytext=(0, 16), ha="center", fontsize=7.5, color="darkred")
+                    xytext=(0, 18), ha="center", fontsize=10, color="darkred")
 
-    ax.set_xlabel("pretraining step  (stage1, thousands)")
-    ax.set_ylabel("Verbalized eval-awareness rate (%)")
-    ax.set_ylim(-0.4, max(BASE_MAIN_VEA + 2.5, 4))
+    ax.set_xlabel("pretraining step  (stage1, thousands)", fontsize=13)
+    ax.set_ylabel("Verbalized eval-awareness rate (%)", fontsize=13)
+    ymax = max(c[0] + c[2] for c in cot)
+    ax.set_ylim(-0.1, ymax * 1.5)
+    ax.tick_params(labelsize=11)
     ax.grid(alpha=0.3)
-    ax.legend(loc="center left", fontsize=9)
-    ax.set_title("VEA is essentially absent during pretraining — it is installed by post-training\n"
-                 "Olmo-3-1125-32B stage1 checkpoints · 444 prompts × 8 rollouts · 2048-tok cap · "
-                 "Gemini-2.5-flash F1 · by-prompt bootstrap CIs", fontsize=10.5)
+    ax.legend(loc="upper left", fontsize=12)
+    ax.set_title("VEA measured in pretraining", fontsize=16, pad=10)
     pct_top_axis(ax, 656000, thousands=True, label="% of final pretraining step (656k)")
     fig.tight_layout()
-    fig.savefig(P.f("fig1_pretrain_vea.png"), dpi=140)
-    print("saved ->", P.f("fig1_pretrain_vea.png"))
+    fig.savefig(P.f("fig1_pretrain_vea_v2.png"), dpi=140)
+    print("saved ->", P.f("fig1_pretrain_vea_v2.png"))
     for s, c, a, tr in zip(steps, cot, alc, think_rate):
         print(f"  step {s:>7}  VEA|CoT {c[0]:4.1f}% [-{c[1]:.1f}/+{c[2]:.1f}]  "
               f"VEA|all {a[0]:4.2f}% [-{a[1]:.2f}/+{a[2]:.2f}]  </think> {tr:3.0f}%")

@@ -54,7 +54,7 @@ def main():
     dpo = rate_table([r for r in stage if r.get("stage") == "dpo"])
     rlvr = rate_table(load(P.d("rlvr_bench_vea.jsonl"))
                       + load(P.d("rlvr_fortress_vea.jsonl"), force_bm="fortress"))
-    base = rate_table(load(P.d("base_vea_haiku.jsonl")))
+    base = rate_table(load(P.d("base_vea_gpt5mini.jsonl")))
 
     sft_steps = sorted(sft.step.unique())
     rlvr_steps = sorted(rlvr.step.unique())
@@ -102,18 +102,16 @@ def main():
     ax.set_ylim(-6, ymax)
     ax.set_xlim(base_x - 1.0, x_max + 0.7)
     ax.set_yticks(range(0, ymax + 1, 10))
-    ax.text(base_x, ymax * 0.97, "BASE\n(step 0)", ha="center", va="top", fontsize=10,
+    ax.text(base_x, ymax * 0.97, "BASE\n(step 0)", ha="center", va="top", fontsize=13,
             weight="bold", color="#8c564b")
-    ax.text(base_x, -3, "Haiku\njudge*", ha="center", va="center", fontsize=7,
-            style="italic", color="#8c564b")
     ax.text((len(sft_steps) - 1) / 2, ymax * 0.97, "SFT  (Think-SFT, steps 1k→10k)",
-            ha="center", va="top", fontsize=11, weight="bold", color="tab:blue")
-    ax.text(dpo_center, ymax * 0.99, "DPO", ha="center", va="top", fontsize=12,
+            ha="center", va="top", fontsize=14, weight="bold", color="tab:blue")
+    ax.text(dpo_center, ymax * 0.99, "DPO", ha="center", va="top", fontsize=14,
             weight="bold", color="dimgrey")
     ax.text(dpo_center, -3, "no intermediate\ncheckpoints", ha="center", va="center",
-            fontsize=8, style="italic", color="dimgrey")
+            fontsize=9.5, style="italic", color="dimgrey")
     ax.text((x_dpo + x_max) / 2, ymax * 0.97, "RLVR  (Think, steps 50→2300)",
-            ha="center", va="top", fontsize=11, weight="bold", color="tab:green")
+            ha="center", va="top", fontsize=14, weight="bold", color="tab:green")
 
     ticks = [base_x, x_sft[sft_steps[0]], x_sft[sft_steps[len(sft_steps)//2]], x_sft[sft_steps[-1]],
              x_dpo,
@@ -123,24 +121,17 @@ def main():
     labels = ["0", _pl(sft_steps[0], 10000), _pl(sft_steps[len(sft_steps)//2], 10000), _pl(sft_steps[-1], 10000),
               "DPO", _pl(rlvr_steps[0], 2300), _pl(rlvr_steps[len(rlvr_steps)//2], 2300), _pl(rlvr_steps[-1], 2300)]
     ax.set_xticks(ticks)
-    ax.set_xticklabels(labels, fontsize=8)
-    ax.set_xlabel("post-training step  (% = of that stage's final step; stages sequential, not to scale)")
-    ax.set_ylabel("VEA rate (% of rollouts)")
+    ax.set_xticklabels(labels, fontsize=11)
+    ax.set_xlabel("post-training step  (% = of that stage's final step; stages sequential, not to scale)",
+                  fontsize=13)
+    ax.set_ylabel("VEA rate (% of rollouts)", fontsize=13)
+    ax.tick_params(labelsize=11)
     ax.grid(alpha=.25, axis="y")
-    ax.legend(title="benchmark", loc="upper right", fontsize=9)
-    ax.set_title("Verbalized eval-awareness across OLMo-3 32B Think post-training:  "
-                 "BASE → SFT → DPO → RLVR\nall 5 benchmarks · same 444 prompts · Goodfire F1 judge",
-                 fontsize=12)
-    fig.text(0.5, 0.005,
-             "★ = single checkpoints (BASE step 0, DPO).  Dotted lines = unmeasured stage transitions "
-             "(BASE→SFT and SFT→DPO), shown as direction-of-change only.  RLVR flows SOLID from DPO "
-             "(initialized from it).   Per-point CIs omitted (5 overlapping series); effective n≈200 "
-             "per point (ICC≈0.45), see text.   *BASE judged by claude-haiku-4.5 (gpt-5-mini "
-             "unavailable) and tends to under-detect — a conservative floor, not strictly comparable.",
-             ha="center", fontsize=8, style="italic", color="dimgrey")
-    fig.tight_layout(rect=[0, 0.035, 1, 1])
-    fig.savefig(P.f("fig3_stage_connected.png"), dpi=140)
-    print("saved ->", P.f("fig3_stage_connected.png"))
+    ax.legend(title="benchmark", loc="upper right", fontsize=11, title_fontsize=12)
+    ax.set_title("Verbalized eval-awareness through post-training", fontsize=17, pad=10)
+    fig.tight_layout()
+    fig.savefig(P.f("fig3_stage_connected_v2.png"), dpi=140)
+    print("saved ->", P.f("fig3_stage_connected_v2.png"))
 
 
 if __name__ == "__main__":

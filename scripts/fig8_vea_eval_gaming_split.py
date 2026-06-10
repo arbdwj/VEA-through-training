@@ -19,10 +19,18 @@ import matplotlib.pyplot as plt
 import _paths as P
 from _axes import step_pct_labels
 
-R = [json.loads(l) for l in open(P.d("refusal_haiku.jsonl"))]
+from collections import defaultdict as _dd
+import os as _os
+R = [json.loads(l) for l in open(P.d(_os.environ.get("REFUSAL_FILE", "refusal_gpt5mini.jsonl")))]
 R = [r for r in R if r.get("stage") == "rlvr" and r.get("ok") and not r.get("no_answer")
      and r.get("vea") is not None and r.get("refusal") is not None]
-steps = sorted({r["step"] for r in R})
+# only steps with full benchmark coverage (the extra refusal run added Fortress-only steps,
+# which belong to Fig 5's within-question trend, not this all-benchmark pooled view)
+_bench = _dd(set)
+for r in R:
+    _bench[r["step"]].add(r["benchmark"])
+steps = sorted(s for s in _bench if len(_bench[s]) >= 5)
+R = [r for r in R if r["step"] in steps]
 
 vea_ref, vea_comp, nonvea_rate, vea_rate = [], [], [], []
 for s in steps:
@@ -50,7 +58,7 @@ for i in range(len(steps)):
 a.set_xticks(x); a.set_xticklabels(step_pct_labels(steps, 2300), fontsize=8)
 a.set_xlabel("RLVR training step  (% of final, 2300)"); a.set_ylabel("VEA-positive rollouts")
 a.set_ylim(0, max(np.array(vea_ref) + np.array(vea_comp)) * 1.15)
-a.set_title("(A) Of rollouts that verbalize eval-awareness, how many then refuse?")
+a.set_title("(A) Of rollouts that verbalize eval-awareness, how many then refuse?", fontsize=13)
 a.legend(fontsize=8, loc="upper left"); a.grid(alpha=0.25, axis="y")
 
 # (B) VEA vs non-VEA refusal rate (the eval-gaming contrast)
@@ -60,18 +68,18 @@ b.plot(x, nonvea_rate, "s-", color="tab:blue", lw=2.2, ms=8, label="refuse | non
 for i in range(len(steps)):
     b.annotate(f"+{vea_rate[i]-nonvea_rate[i]:.0f}", (x[i], (vea_rate[i]+nonvea_rate[i])/2),
                ha="center", va="center", fontsize=9, color="darkorange", weight="bold")
-b.set_xticks(x); b.set_xticklabels(step_pct_labels(steps, 2300), fontsize=8)
-b.set_xlabel("RLVR training step  (% of final, 2300)"); b.set_ylabel("refusal rate (%)")
+b.set_xticks(x); b.set_xticklabels(step_pct_labels(steps, 2300), fontsize=9)
+b.set_xlabel("RLVR training step  (% of final, 2300)", fontsize=12)
+b.set_ylabel("refusal rate (%)", fontsize=12)
 b.set_ylim(0, 100)
-b.set_title("(B) Is it eval-gaming or baseline safety? VEA vs non-VEA refusal (pooled = upper bound)")
-b.legend(fontsize=8, loc="center right"); b.grid(alpha=0.25)
+b.set_title("(B) Is it eval-gaming or baseline safety? VEA vs non-VEA refusal (pooled = upper bound)",
+            fontsize=13)
+b.legend(fontsize=10, loc="center right"); b.grid(alpha=0.25)
 
-fig.suptitle("VEA rollouts and eval-gaming across RLVR  ·  OLMo-3.1-32B-Think · all 5 benchmarks · "
-             "refusal: Haiku F2\n(pooled gap overstates eval-gaming — see Fig 5 for the "
-             "within-question estimate)", fontsize=9.5)
+fig.suptitle("VEA and eval-gaming across RLVR", fontsize=16)
 fig.tight_layout(rect=[0, 0, 1, 0.95])
-fig.savefig(P.f("fig8_vea_eval_gaming_split.png"), dpi=140)
-print("saved ->", P.f("fig8_vea_eval_gaming_split.png"))
+fig.savefig(P.f("fig8_vea_eval_gaming_split_v2.png"), dpi=140)
+print("saved ->", P.f("fig8_vea_eval_gaming_split_v2.png"))
 for i, s in enumerate(steps):
     print(f"  step {s:>5}: VEA refused={vea_ref[i]} complied={vea_comp[i]} "
           f"({vea_rate[i]:.0f}%) | non-VEA refusal={nonvea_rate[i]:.0f}% | gap=+{vea_rate[i]-nonvea_rate[i]:.0f}")
