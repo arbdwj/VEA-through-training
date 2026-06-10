@@ -15,12 +15,14 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 import _paths as P
+from _axes import pct_top_axis
 
 MIN = 2
 
 
 def main():
-    R = [json.loads(l) for l in open(P.d("refusal_haiku.jsonl"))]
+    import os as _os
+    R = [json.loads(l) for l in open(P.d(_os.environ.get("REFUSAL_FILE", "refusal_gpt5mini.jsonl")))]
     R = [r for r in R if r.get("ok") and not r.get("no_answer")
          and r.get("refusal") is not None and r.get("vea") is not None
          and r.get("benchmark") == "fortress"]
@@ -62,15 +64,16 @@ def main():
                         fontsize=9, color="darkorange", weight="bold")
             ax.annotate(f"n={n}", (x, gv), textcoords="offset points", xytext=(0, 9),
                         ha="center", fontsize=7, color="tab:red")
-        ax.set_title(title, fontsize=12); ax.set_ylabel("refusal rate (%)")
-        ax.set_ylim(0, 100); ax.grid(alpha=.3); ax.set_xlabel("training step")
-    axes[0].legend(loc="center right", fontsize=8)
-    fig.suptitle("WITHIN-question eval-gaming trend on Fortress  (questions that elicit VEA)\n"
-                 "per-question refuse|VEA vs refuse|non-VEA, ≥2/≥2 rollouts · OLMo-3 32B Think · "
-                 "Haiku F2 · small n → wide CIs", fontsize=10)
+        ax.set_title(title, fontsize=14); ax.set_ylabel("refusal rate (%)", fontsize=13)
+        ax.set_ylim(0, 100); ax.grid(alpha=.3); ax.set_xlabel("training step", fontsize=13)
+        ax.tick_params(labelsize=11)
+        pct_top_axis(ax, 10000 if stage == "sft" else 2300,
+                     label=f"% of final {stage.upper()} step ({'10k' if stage=='sft' else '2300'})")
+    axes[0].legend(loc="center right", fontsize=10)
+    fig.suptitle("Within-question eval-gaming on Fortress", fontsize=16)
     fig.tight_layout(rect=[0, 0, 1, 0.94])
-    fig.savefig(P.f("fig5_within_question_eval_gaming.png"), dpi=140)
-    print("saved ->", P.f("fig5_within_question_eval_gaming.png"))
+    fig.savefig(P.f("fig5_within_question_eval_gaming_v2.png"), dpi=140)
+    print("saved ->", P.f("fig5_within_question_eval_gaming_v2.png"))
 
 
 if __name__ == "__main__":

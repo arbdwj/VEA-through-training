@@ -76,14 +76,14 @@ def main():
     ax.set_xticks(x)
     ax.set_xticklabels([f"{STAGES[0]}\n(1k→10k)", f"{STAGES[1]}\n(vs SFT end)",
                         f"{STAGES[2]}\n(DPO→2300)"], fontsize=11)
-    ax.set_ylabel("net Δ VEA  (percentage points)")
-    ax.set_title("Net VEA change produced by each post-training stage — per benchmark + overall mean\n"
-                 "OLMo-3 32B Think · GPT-5-mini Goodfire Appendix F1 judge")
+    ax.set_ylabel("net Δ VEA  (percentage points)", fontsize=13)
+    ax.set_title("Net VEA change by post-training stage", fontsize=16, pad=10)
+    ax.tick_params(labelsize=11)
     ax.grid(alpha=.25, axis="y")
-    ax.legend(ncol=2, fontsize=8.5, loc="upper left")
+    ax.legend(ncol=2, fontsize=10, loc="upper left")
     fig.tight_layout()
-    fig.savefig(P.f("fig4_stage_net_change.png"), dpi=140)
-    print("saved ->", P.f("fig4_stage_net_change.png"))
+    fig.savefig(P.f("fig4_stage_net_change_v2.png"), dpi=140)
+    print("saved ->", P.f("fig4_stage_net_change_v2.png"))
 
 
 if __name__ == "__main__":
