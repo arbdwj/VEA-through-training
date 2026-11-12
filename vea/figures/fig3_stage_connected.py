@@ -1,7 +1,8 @@
 """Figure 3 — single continuous VEA plot across post-training: BASE -> SFT -> DPO -> RLVR.
 
-Each stage's measured checkpoints are solid lines (per benchmark). BASE->SFT and SFT->DPO
-transitions are DOTTED bridges (direction of change only — no intermediate checkpoints).
+Each stage's measured checkpoints are solid lines (per benchmark). The released SFT model
+(main, DPO's parent; diamond) closes the SFT stage. BASE->SFT, SFT 10k->released SFT and
+released SFT->DPO are DOTTED bridges (no intermediate checkpoints).
 RLVR flows SOLID from DPO (it is initialized from DPO). BASE (step 0) judged by Haiku.
 
 Reads data/{base,sft,dpo,rlvr}/vea.jsonl.
@@ -48,17 +49,20 @@ def load(fp, force_bm=None):
 
 
 def main():
-    sft = rate_table([r for r in P.rows("vea.jsonl", "sft") if r.get("stage") == "sft"])
+    sft_rows = P.rows("vea.jsonl", "sft")
+    sft = rate_table([r for r in sft_rows if r.get("stage") == "sft" and r.get("lr", "5e-5") == "5e-5"])
+    merge = rate_table([r for r in sft_rows if r.get("stage") == "sft_merge"])
     dpo = rate_table(P.rows("vea.jsonl", "dpo"))
     rlvr = rate_table(P.rows("vea.jsonl", "rlvr"))
     base = rate_table(P.rows("vea.jsonl", "base"))
 
     sft_steps = sorted(sft.step.unique())
     rlvr_steps = sorted(rlvr.step.unique())
-    GAP1, GAP2 = 3.0, 1.5
+    GAP0, GAP1, GAP2 = 1.6, 2.6, 1.5
     x_sft = {s: i for i, s in enumerate(sft_steps)}
-    sft_end = len(sft_steps) - 0.5
-    x_dpo = (len(sft_steps) - 1) + GAP1
+    x_merge = (len(sft_steps) - 1) + GAP0
+    sft_end = x_merge + 0.6
+    x_dpo = x_merge + GAP1
     x_rlvr = {s: x_dpo + GAP2 + j for j, s in enumerate(rlvr_steps)}
     x_max = max(x_rlvr.values())
     dpo_center = (sft_end + x_dpo) / 2
@@ -83,7 +87,14 @@ def main():
         # per-point CIs omitted here (5 overlapping series -> clutter); effective n is small,
         # see Fig 1/2 for clustered CIs and the Limitations note in the text.
         ax.plot(xs, ds.vea, color=c, marker="o", ms=4, lw=1.9, label=bm)
-        ax.plot([xs[-1], x_dpo], [ds.vea.iloc[-1], dpo_y], ls=":", color=c, lw=1.4, alpha=.7)
+        dm = merge[merge.benchmark == bm]
+        if len(dm):
+            m_y = dm.vea.iloc[0]
+            ax.plot([xs[-1], x_merge], [ds.vea.iloc[-1], m_y], ls=":", color=c, lw=1.4, alpha=.7)
+            ax.plot([x_merge, x_dpo], [m_y, dpo_y], ls=":", color=c, lw=1.4, alpha=.7)
+            ax.plot(x_merge, m_y, marker="D", ms=10, color=c, markeredgecolor="k", markeredgewidth=.6, zorder=5)
+        else:
+            ax.plot([xs[-1], x_dpo], [ds.vea.iloc[-1], dpo_y], ls=":", color=c, lw=1.4, alpha=.7)
         ax.plot([x_dpo] + xr, [dpo_y] + list(dr.vea), ls="-", color=c, lw=1.9, zorder=2)
         ax.plot(xr, dr.vea, color=c, ls="none", marker="s", ms=5, zorder=3)
         ax.plot(x_dpo, dpo_y, marker="*", ms=20, color=c, markeredgecolor="k",
@@ -101,7 +112,7 @@ def main():
     ax.set_yticks(range(0, ymax + 1, 10))
     ax.text(base_x, ymax * 0.97, "BASE\n(step 0)", ha="center", va="top", fontsize=13,
             weight="bold", color="#8c564b")
-    ax.text((len(sft_steps) - 1) / 2, ymax * 0.97, "SFT  (Think-SFT, steps 1k→10k)",
+    ax.text((len(sft_steps) - 1) / 2, ymax * 0.97, "SFT  (Think-SFT lr 5e-5, steps 1k→10k)",
             ha="center", va="top", fontsize=14, weight="bold", color="tab:blue")
     ax.text(dpo_center, ymax * 0.99, "DPO", ha="center", va="top", fontsize=14,
             weight="bold", color="dimgrey")
@@ -111,12 +122,12 @@ def main():
             ha="center", va="top", fontsize=14, weight="bold", color="tab:green")
 
     ticks = [base_x, x_sft[sft_steps[0]], x_sft[sft_steps[len(sft_steps)//2]], x_sft[sft_steps[-1]],
-             x_dpo,
+             x_merge, x_dpo,
              x_rlvr[rlvr_steps[0]], x_rlvr[rlvr_steps[len(rlvr_steps)//2]], x_rlvr[rlvr_steps[-1]]]
     def _pl(s, final):
         return f"{s}\n{100*s/final:.0f}%"
     labels = ["0", _pl(sft_steps[0], 10000), _pl(sft_steps[len(sft_steps)//2], 10000), _pl(sft_steps[-1], 10000),
-              "DPO", _pl(rlvr_steps[0], 2300), _pl(rlvr_steps[len(rlvr_steps)//2], 2300), _pl(rlvr_steps[-1], 2300)]
+              "released\nSFT", "DPO", _pl(rlvr_steps[0], 2300), _pl(rlvr_steps[len(rlvr_steps)//2], 2300), _pl(rlvr_steps[-1], 2300)]
     ax.set_xticks(ticks)
     ax.set_xticklabels(labels, fontsize=11)
     ax.set_xlabel("post-training step  (% = of that stage's final step; stages sequential, not to scale)",
@@ -124,7 +135,7 @@ def main():
     ax.set_ylabel("VEA rate (% of rollouts)", fontsize=13)
     ax.tick_params(labelsize=11)
     ax.grid(alpha=.25, axis="y")
-    ax.legend(title="benchmark", loc="upper right", fontsize=11, title_fontsize=12)
+    ax.legend(loc="upper left", bbox_to_anchor=(0.1, 0.88), ncol=5, fontsize=11, frameon=False)
     ax.set_title("Verbalized eval-awareness through post-training", fontsize=17, pad=10)
     fig.tight_layout()
     fig.savefig(P.f("fig3_stage_connected.png"), dpi=140)

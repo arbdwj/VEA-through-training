@@ -1,10 +1,10 @@
 """Figure 4 — Net VEA change produced by each post-training stage (SFT, DPO, RLVR),
 per benchmark + the overall mean of all 5 benchmarks.
 
-Per-stage delta = (VEA at end of stage) - (VEA at start of stage):
-  ΔSFT  = SFT(step10000) - SFT(step1000)
-  ΔDPO  = DPO            - SFT(step10000)
-  ΔRLVR = RLVR(step2300) - DPO
+Per-stage delta = (VEA at end of stage) - (VEA at start of stage), chained so the stages add up:
+  ΔSFT  = released SFT (main) - SFT(lr 5e-5, step1000)
+  ΔDPO  = DPO                 - released SFT (main)      (DPO is trained from main)
+  ΔRLVR = RLVR(step2300)      - DPO
 Reads data/{sft,dpo,rlvr}/vea.jsonl.
 """
 import json
@@ -22,7 +22,7 @@ LABELS = {"fortress": "Fortress", "jbb": "JailbreakBench", "advbench": "AdvBench
 COL = {"fortress": "tab:blue", "jbb": "tab:orange", "advbench": "tab:green",
        "harmfulqa": "tab:red", "agentharm": "tab:purple", "Overall": "black"}
 STAGES = ["SFT", "DPO", "RLVR"]
-SFT0, SFT1, RL1 = 1000, 10000, 2300
+SFT0, RL1 = 1000, 2300
 
 
 def load(fp, force_bm=None):
@@ -40,12 +40,14 @@ def rate(rows, bm, step=None):
 
 def main():
     ok = lambda rows: [r for r in rows if r.get("ok")]
-    sft = [r for r in ok(P.rows("vea.jsonl", "sft")) if r.get("stage") == "sft"]
+    sft_all = ok(P.rows("vea.jsonl", "sft"))
+    sft = [r for r in sft_all if r.get("stage") == "sft" and r.get("lr", "5e-5") == "5e-5"]
+    merge = [r for r in sft_all if r.get("stage") == "sft_merge"]
     dpo = ok(P.rows("vea.jsonl", "dpo"))
     rlvr = ok(P.rows("vea.jsonl", "rlvr"))
 
     def anchors(bm):
-        return {"sft0": rate(sft, bm, SFT0), "sft1": rate(sft, bm, SFT1),
+        return {"sft0": rate(sft, bm, SFT0), "sft1": rate(merge, bm),
                 "dpo": rate(dpo, bm), "rl1": rate(rlvr, bm, RL1)}
 
     def deltas(a):
@@ -72,15 +74,19 @@ def main():
                     f"{v:+.0f}", ha="center", va="bottom" if v >= 0 else "top",
                     fontsize=6.5, rotation=90, color="dimgrey")
 
+    allv = [v for k in order for v in series[k]]
+    ax.set_ylim(min(allv) - 3, max(allv) + 4)
     ax.axhline(0, color="k", lw=.8)
     ax.set_xticks(x)
-    ax.set_xticklabels([f"{STAGES[0]}\n(1k→10k)", f"{STAGES[1]}\n(vs SFT end)",
+    ax.set_xticklabels([f"{STAGES[0]}\n(1k→released SFT)", f"{STAGES[1]}\n(released SFT→DPO)",
                         f"{STAGES[2]}\n(DPO→2300)"], fontsize=11)
     ax.set_ylabel("net Δ VEA  (percentage points)", fontsize=13)
     ax.set_title("Net VEA change by post-training stage", fontsize=16, pad=10)
     ax.tick_params(labelsize=11)
     ax.grid(alpha=.25, axis="y")
     ax.legend(ncol=2, fontsize=10, loc="upper left")
+    for k in order:
+        print(f"  {LABELS.get(k, k):<15} " + "  ".join(f"{st} {v:+5.1f}" for st, v in zip(STAGES, series[k])))
     fig.tight_layout()
     fig.savefig(P.f("fig4_stage_net_change.png"), dpi=140)
     print("saved ->", P.f("fig4_stage_net_change.png"))
