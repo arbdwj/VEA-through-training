@@ -1,7 +1,7 @@
 """Build data/ (corrected) from archive/v1/data/ (as published) + the template-fixed rerun labels.
 
 Both trees use the stage layout data/<stage>/{vea,refusal}.jsonl. Replaced:
-  sft/vea.jsonl        all 10 SFT steps re-sampled (+ the SFT merge, new)   <- paths.vea/sft_5e-5_*, sftmerge_*
+  sft/vea.jsonl        SFT steps re-sampled, lr 5e-5 and 1e-4 (+ released SFT main)  <- paths.vea/sft_*, sftmerge_*
   rlvr/vea.jsonl       re-sampled RLVR steps (50/1050/1800/2300 Ai2 template; 300/800 misaligned files)
   pretrain/vea.jsonl   Gemini-2.5-flash -> gpt-5-mini (outputs/pretrain_vea_gpt5mini.jsonl)
   */refusal.jsonl      re-sampled checkpoints -> paths.refusal (Fortress only; their stale
@@ -32,11 +32,15 @@ def main():
     shutil.copytree(SRC, DST, ignore=shutil.ignore_patterns("old", "vea_*.csv"))
 
     new = {os.path.basename(p)[:-6]: rd(p) for p in glob.glob(os.path.join(J, "*.jsonl"))}
-    new_sft = [r for k, v in new.items() if k.startswith("sft_5e-5") for r in v]
+    sft_keys = sorted(k for k in new if k.startswith(("sft_5e-5", "sft_1e-4")))
+    partial = [k for k in sft_keys if len(new[k]) != 3552]
+    if partial:
+        print(f"skipping incompletely judged SFT checkpoints: {partial}")
+    new_sft = [r for k in sft_keys if k not in partial for r in new[k]]
     new_merge = [r for k, v in new.items() if k.startswith("sftmerge") for r in v]
     new_rl = [r for k, v in new.items() if k.startswith("rlvr_step") for r in v]
     rl_steps = {r["step"] for r in new_rl}
-    assert len(new_sft) == 10 * 3552 and len(new_rl) == sum(k.startswith("rlvr_step") for k in new) * 3552
+    assert sum(k.startswith("sft_5e-5") for k in sft_keys if k not in partial) >= 10 and len(new_rl) == sum(k.startswith("rlvr_step") for k in new) * 3552
     print(f"rerun RLVR steps replaced: {sorted(rl_steps)}")
 
     wr("sft/vea.jsonl", [r for r in rd(os.path.join(SRC, "sft/vea.jsonl")) if r["stage"] != "sft"] + new_sft + new_merge)
