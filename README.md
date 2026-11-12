@@ -45,7 +45,7 @@ data/           corrected data (input to every figure), one folder per stage:
   base/           vea.jsonl
   sft/            vea.jsonl (SFT steps + merge), refusal.jsonl, training_data_vea.jsonl
   dpo/            vea.jsonl, refusal.jsonl, training_data_vea.jsonl
-  rlvr/           vea.jsonl, refusal.jsonl, vea_first_token.csv, vea_position*.csv
+  rlvr/           vea.jsonl, refusal.jsonl
                   every row has stage, step, benchmark, prompt_id (Fortress ids are fortress_<n>)
 figures/        corrected figures; v1_vs_v2/ = each published figure next to its fix
 archive/v1/     as published: data/ (same stage layout), figures/, and code/ (v1-only one-offs, kept for provenance)

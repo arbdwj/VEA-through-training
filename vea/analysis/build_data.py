@@ -6,7 +6,8 @@ Both trees use the stage layout data/<stage>/{vea,refusal}.jsonl. Replaced:
   pretrain/vea.jsonl   Gemini-2.5-flash -> gpt-5-mini (outputs/pretrain_vea_gpt5mini.jsonl)
   */refusal.jsonl      re-sampled checkpoints -> paths.refusal (Fortress only; their stale
                        non-Fortress rows are dropped)
-Everything else is copied unchanged. Template-gap runs (rlvrswap_*, rlvrtrain_*) are not data.
+Everything else is copied unchanged, except v1-only artefacts that stay in the archive
+(old/ Haiku labels; rlvr/vea_first_token.csv and vea_position*.csv, never part of the post). Template-gap runs (rlvrswap_*, rlvrtrain_*) are not data.
 """
 import glob, json, os, shutil
 from vea import config as C, paths
@@ -27,7 +28,8 @@ def wr(rel, rows):
 def main():
     if os.path.exists(DST):
         shutil.rmtree(DST)
-    shutil.copytree(SRC, DST, ignore=shutil.ignore_patterns("old"))
+    # v1-only artefacts (old/ judges, RLVR VEA-position CSVs) stay in the archive
+    shutil.copytree(SRC, DST, ignore=shutil.ignore_patterns("old", "vea_*.csv"))
 
     new = {os.path.basename(p)[:-6]: rd(p) for p in glob.glob(os.path.join(J, "*.jsonl"))}
     new_sft = [r for k, v in new.items() if k.startswith("sft_5e-5") for r in v]
