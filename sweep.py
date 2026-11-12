@@ -3,7 +3,7 @@ One sampling config applies to the whole sweep.
 
   modal run --detach sweep.py --model rlvr                       # all steps
   modal run --detach sweep.py --model rlvr --steps 50,800        # a subset
-  modal run --detach sweep.py --model temp/rlvr_swap               # an ancillary experiment
+  modal run --detach sweep.py --model tmp_configs/rlvr_swap               # an ancillary experiment
   modal run sweep.py --model sft --preflight                     # CPU only: render + assert every checkpoint
 
 Checkpoints run in parallel (as many as Modal grants); live progress: python -m vea.progress_server

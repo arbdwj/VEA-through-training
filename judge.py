@@ -1,7 +1,7 @@
 """Judge generated rollouts (gpt-5-mini; settings under `judge:` in the config).
 
   python judge.py vea --model rlvr                       # every step in configs/models/rlvr.yaml
-  python judge.py vea --model temp/rlvr_swap --steps 50,800
+  python judge.py vea --model tmp_configs/rlvr_swap --steps 50,800
   python judge.py vea --keys sft_5e-5_step10000,rlvr_step_0050
   python judge.py vea                                    # every finished generation job
   python judge.py refusal --model rlvr                   # refusal (Fortress) + joined VEA

@@ -26,7 +26,7 @@ analyze.py      analyses + figures  python analyze.py template-gap | figures | .
 configs/
   models/         WHAT: pretrain, sft, dpo, rlvr. Identical fields in every file (schema-checked):
                   model, revision pattern, steps, output key, pinned template, dataset, default sampling
-  temp/           ancillary experiments, same schema: sft_merge, rlvr_swap, rlvr_train (template gap)
+  tmp_configs/    ancillary experiments, same schema: sft_merge, rlvr_swap, rlvr_train (template gap)
   sampling/       HOW: n, temperature, top_p, seed, context, token budgets (one per sweep)
                   standard (8k)  long_fortress (8k, Fortress 16k)  pretrain (2k in 8k context)
   settings.yaml   judge model/effort, local output paths, Modal infra
@@ -48,8 +48,8 @@ outputs/        raw rollouts and labels (gitignored; large)
 A **model config** says which checkpoints to load (`revision: "step_{step:04d}"` over `steps:`), which
 chat template replaces the branch's own (repo + pinned commit + the exact expected string), which
 dataset, and which sampling config it uses by default. A **sampling config** is shared by the whole
-sweep; `--sampling` overrides the default. Ancillary runs live in `configs/temp/` and are addressed as
-`--model temp/rlvr_swap`; they differ from `models/rlvr.yaml` only in `stage`, `key`, `template`, `note`.
+sweep; `--sampling` overrides the default. Ancillary runs live in `configs/tmp_configs/` and are addressed as
+`--model tmp_configs/rlvr_swap`; they differ from `models/rlvr.yaml` only in `stage`, `key`, `template`, `note`.
 
 ## Reproduce
 

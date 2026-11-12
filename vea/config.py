@@ -2,12 +2,12 @@
 
   configs/models/<name>.yaml     WHAT to run: pretrain, sft, dpo, rlvr. Every model config has
                                  exactly the same fields (MODEL_SCHEMA); the loader enforces it.
-  configs/temp/<name>.yaml       ancillary experiments (same schema), e.g. the template-gap runs
+  configs/tmp_configs/<name>.yaml       ancillary experiments (same schema), e.g. the template-gap runs
   configs/sampling/<name>.yaml   HOW to sample: n, temperature, top_p, seed, context, token budgets
   configs/settings.yaml          judge, local paths, Modal infra
 
 `revision` and `key` are format strings over {step}. A config is given by name ("rlvr",
-"temp/rlvr_swap") or by path.
+"tmp_configs/rlvr_swap") or by path.
 """
 from pathlib import Path
 
@@ -29,7 +29,7 @@ def _resolve(ref, folder):
     if p.is_file():
         return p
     name = ref if str(ref).endswith(".yaml") else f"{ref}.yaml"
-    for base in (folder, paths.CONFIGS):          # "rlvr" -> models/rlvr.yaml; "temp/rlvr_swap" -> configs/temp/...
+    for base in (folder, paths.CONFIGS):          # "rlvr" -> models/rlvr.yaml; "tmp_configs/rlvr_swap" -> configs/tmp_configs/...
         if (base / name).is_file():
             return base / name
     raise FileNotFoundError(f"no config {ref!r} (looked in {folder} and {paths.CONFIGS})")
