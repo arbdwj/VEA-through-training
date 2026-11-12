@@ -6,7 +6,7 @@ non-VEA baseline (i.e. genuine eval-gaming) or just baseline safety refusal?
 (B) refusal rate among VEA vs non-VEA rollouts per step; the shaded gap is the pooled
     eval-gaming increment. Pooled over all 5 benchmarks → an UPPER BOUND (VEA-eliciting
     prompts are also the refusal-prone ones); the within-question version (Fig 5) is the
-    confound-controlled estimate. Reads ../data/refusal_haiku.jsonl.
+    confound-controlled estimate. Reads data/{sft,dpo,rlvr}/refusal.jsonl (REFUSAL_FILE=old/refusal_haiku.jsonl for the v1 Haiku labels).
 """
 import json
 from collections import defaultdict
@@ -21,7 +21,7 @@ from _axes import step_pct_labels
 
 from collections import defaultdict as _dd
 import os as _os
-R = [json.loads(l) for l in open(P.d(_os.environ.get("REFUSAL_FILE", "refusal_gpt5mini.jsonl")))]
+R = P.refusal_rows()
 R = [r for r in R if r.get("stage") == "rlvr" and r.get("ok") and not r.get("no_answer")
      and r.get("vea") is not None and r.get("refusal") is not None]
 # only steps with full benchmark coverage (the extra refusal run added Fortress-only steps,

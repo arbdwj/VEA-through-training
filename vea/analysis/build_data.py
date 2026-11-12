@@ -1,44 +1,48 @@
-"""Build data/ (corrected): archive/v1/data/ with the template-fixed rerun (generate.py / sweep.py, judge.py) merged in.
+"""Build data/ (corrected) from archive/v1/data/ (as published) + the template-fixed rerun labels.
 
-  stage_vea.jsonl          SFT rows (all 10 steps) -> outputs/rerun_v2_judgments/sft_*
-  rlvr_bench_vea.jsonl     re-sampled RLVR steps (50/1050/1800/2300 template; 300/800 misaligned files) -> rerun
-  rlvr_fortress_vea.jsonl  steps 50/1050/1800/2300 -> rerun (Fortress rows)
-  pretrain_vea_judgments   Gemini-2.5-flash -> gpt-5-mini (outputs/pretrain_vea_gpt5mini.jsonl)
-  refusal_gpt5mini.jsonl   re-sampled checkpoints -> outputs/rerun_v2_refusal (Fortress only;
-                           their stale non-Fortress rows are dropped)
-Everything else is copied unchanged.
+Both trees use the stage layout data/<stage>/{vea,refusal}.jsonl. Replaced:
+  sft/vea.jsonl        all 10 SFT steps re-sampled (+ the SFT merge, new)   <- paths.vea/sft_5e-5_*, sftmerge_*
+  rlvr/vea.jsonl       re-sampled RLVR steps (50/1050/1800/2300 Ai2 template; 300/800 misaligned files)
+  pretrain/vea.jsonl   Gemini-2.5-flash -> gpt-5-mini (outputs/pretrain_vea_gpt5mini.jsonl)
+  */refusal.jsonl      re-sampled checkpoints -> paths.refusal (Fortress only; their stale
+                       non-Fortress rows are dropped)
+Everything else is copied unchanged. Template-gap runs (rlvrswap_*, rlvrtrain_*) are not data.
 """
 import glob, json, os, shutil
 from vea import config as C, paths
 _cfg = C.settings()
 ROOT = str(paths.ROOT)
-SRC, DST = os.path.join(ROOT, "archive", "v1", "data"), os.path.join(ROOT, "data")
+SRC, DST = str(paths.ARCHIVE_V1), str(paths.DATA)
 J, R = os.path.join(ROOT, _cfg["paths"]["vea"]), os.path.join(ROOT, _cfg["paths"]["refusal"])
+REFUSAL_STAGE_DIR = {"sft": "sft", "sft_merge": "sft", "dpo": "dpo", "rlvr": "rlvr"}
+rd = lambda p: [json.loads(l) for l in open(p)]
+
+
+def wr(rel, rows):
+    with open(os.path.join(DST, rel), "w") as f:
+        f.writelines(json.dumps(r) + "\n" for r in rows)
+    print(f"{rel}: {len(rows)} rows")
+
+
 def main():
     if os.path.exists(DST):
         shutil.rmtree(DST)
     shutil.copytree(SRC, DST, ignore=shutil.ignore_patterns("old"))
-    rd = lambda p: [json.loads(l) for l in open(p)]
-    def wr(name, rows):
-        with open(os.path.join(DST, name), "w") as f:
-            f.writelines(json.dumps(r) + "\n" for r in rows)
-        print(f"{name}: {len(rows)} rows")
 
     new = {os.path.basename(p)[:-6]: rd(p) for p in glob.glob(os.path.join(J, "*.jsonl"))}
     new_sft = [r for k, v in new.items() if k.startswith("sft_5e-5") for r in v]
     new_merge = [r for k, v in new.items() if k.startswith("sftmerge") for r in v]
     new_rl = [r for k, v in new.items() if k.startswith("rlvr_step") for r in v]
     rl_steps = {r["step"] for r in new_rl}
-    n_rl = sum(k.startswith("rlvr_step") for k in new)
-    assert len(new_sft) == 10 * 3552 and len(new_rl) == n_rl * 3552
+    assert len(new_sft) == 10 * 3552 and len(new_rl) == sum(k.startswith("rlvr_step") for k in new) * 3552
     print(f"rerun RLVR steps replaced: {sorted(rl_steps)}")
 
-    wr("stage_vea.jsonl", [r for r in rd(os.path.join(SRC, "stage_vea.jsonl")) if r["stage"] != "sft"] + new_sft + new_merge)
-    wr("rlvr_bench_vea.jsonl", [r for r in rd(os.path.join(SRC, "rlvr_bench_vea.jsonl")) if r["step"] not in rl_steps]
-       + [r for r in new_rl if r["benchmark"] != "fortress"])
-    wr("rlvr_fortress_vea.jsonl", [r for r in rd(os.path.join(SRC, "rlvr_fortress_vea.jsonl")) if r["step"] not in rl_steps]
-       + [r for r in new_rl if r["benchmark"] == "fortress"])
-    wr("pretrain_vea_judgments.jsonl", rd(os.path.join(ROOT, "outputs/pretrain_vea_gpt5mini.jsonl")))
+    wr("sft/vea.jsonl", [r for r in rd(os.path.join(SRC, "sft/vea.jsonl")) if r["stage"] != "sft"] + new_sft + new_merge)
+    kept = [r for r in rd(os.path.join(SRC, "rlvr/vea.jsonl")) if r["step"] not in rl_steps]
+    is_f = lambda r: r["benchmark"] == "fortress"
+    wr("rlvr/vea.jsonl", [r for r in kept if not is_f(r)] + [r for r in new_rl if not is_f(r)]
+       + [r for r in kept if is_f(r)] + [r for r in new_rl if is_f(r)])
+    wr("pretrain/vea.jsonl", rd(os.path.join(ROOT, "outputs/pretrain_vea_gpt5mini.jsonl")))
 
     replaced, ref_new = set(), []
     for p in glob.glob(os.path.join(R, "[!_]*.jsonl")):
@@ -49,5 +53,6 @@ def main():
         for r in rd(p):
             r["vea"] = vea[(r["prompt_id"], r["rollout_id"])]
             ref_new.append(r); replaced.add((r["stage"], r["step"]))
-    wr("refusal_gpt5mini.jsonl", [r for r in rd(os.path.join(SRC, "refusal_gpt5mini.jsonl"))
-                                  if (r["stage"], r["step"]) not in replaced] + ref_new)
+    for d in ("sft", "dpo", "rlvr"):
+        wr(f"{d}/refusal.jsonl", [r for r in rd(os.path.join(SRC, d, "refusal.jsonl")) if (r["stage"], r["step"]) not in replaced]
+           + [r for r in ref_new if REFUSAL_STAGE_DIR[r["stage"]] == d])

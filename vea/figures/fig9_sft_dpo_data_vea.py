@@ -1,7 +1,7 @@
 """Figure 9 — VEA in the training-data traces the model learns from:
 SFT target (DeepSeek-R1) vs DPO chosen (qwen3-32b), on the safety subsets.
 The gap is a FREQUENCY effect — conditional on appearing, VEA intensity is equal (median 5/10).
-Reads ../data/sft_vea_safety.jsonl + ../data/dpo_vea_safety.jsonl.
+Reads data/{sft,dpo}/training_data_vea.jsonl.
 """
 import json
 
@@ -22,9 +22,9 @@ def rate(path, side=None):
 
 
 def main():
-    sft, sft_ci, n_sft = rate(P.d("sft_vea_safety.jsonl"))
-    dch, dch_ci, n_dch = rate(P.d("dpo_vea_safety.jsonl"), side="chosen")
-    drj, drj_ci, n_drj = rate(P.d("dpo_vea_safety.jsonl"), side="rejected")
+    sft, sft_ci, n_sft = rate(P.d("sft", "training_data_vea.jsonl"))
+    dch, dch_ci, n_dch = rate(P.d("dpo", "training_data_vea.jsonl"), side="chosen")
+    drj, drj_ci, n_drj = rate(P.d("dpo", "training_data_vea.jsonl"), side="rejected")
 
     labels = [f"SFT target\n(DeepSeek-R1)\nn={n_sft}",
               f"DPO chosen\n(qwen3-32b)\nn={n_dch}",

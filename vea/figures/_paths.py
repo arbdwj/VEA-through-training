@@ -23,3 +23,24 @@ def d(*parts):
 
 def f(name):
     return os.path.join(FIG, name)
+
+
+STAGES = ("pretrain", "base", "sft", "dpo", "rlvr")
+
+
+def rows(name, *stages):
+    """Concatenate <DATA>/<stage>/<name> (JSONL) over the given stages (default: all that have it)."""
+    import json
+    out = []
+    for s in stages or STAGES:
+        p = d(s, name)
+        if os.path.exists(p):
+            out += [json.loads(l) for l in open(p)]
+    return out
+
+
+def refusal_rows():
+    """Refusal labels for every stage; REFUSAL_FILE (relative to DATA) overrides, e.g. old/refusal_haiku.jsonl."""
+    import json
+    alt = os.environ.get("REFUSAL_FILE")
+    return [json.loads(l) for l in open(d(alt))] if alt else rows("refusal.jsonl")

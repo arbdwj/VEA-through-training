@@ -4,8 +4,7 @@ Each stage's measured checkpoints are solid lines (per benchmark). BASE->SFT and
 transitions are DOTTED bridges (direction of change only — no intermediate checkpoints).
 RLVR flows SOLID from DPO (it is initialized from DPO). BASE (step 0) judged by Haiku.
 
-Reads ../data/stage_vea.jsonl, ../data/rlvr_bench_vea.jsonl, ../data/rlvr_fortress_vea.jsonl,
-../data/base_vea_haiku.jsonl.
+Reads data/{base,sft,dpo,rlvr}/vea.jsonl.
 """
 import json
 
@@ -49,12 +48,10 @@ def load(fp, force_bm=None):
 
 
 def main():
-    stage = load(P.d("stage_vea.jsonl"))
-    sft = rate_table([r for r in stage if r.get("stage") == "sft"])
-    dpo = rate_table([r for r in stage if r.get("stage") == "dpo"])
-    rlvr = rate_table(load(P.d("rlvr_bench_vea.jsonl"))
-                      + load(P.d("rlvr_fortress_vea.jsonl"), force_bm="fortress"))
-    base = rate_table(load(P.d("base_vea_gpt5mini.jsonl")))
+    sft = rate_table([r for r in P.rows("vea.jsonl", "sft") if r.get("stage") == "sft"])
+    dpo = rate_table(P.rows("vea.jsonl", "dpo"))
+    rlvr = rate_table(P.rows("vea.jsonl", "rlvr"))
+    base = rate_table(P.rows("vea.jsonl", "base"))
 
     sft_steps = sorted(sft.step.unique())
     rlvr_steps = sorted(rlvr.step.unique())

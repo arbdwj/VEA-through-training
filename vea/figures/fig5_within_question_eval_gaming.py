@@ -4,7 +4,7 @@ At each checkpoint, restrict to Fortress questions that elicit VEA (>=2 VEA & >=
 rollouts out of 8), average each question's refuse|VEA and refuse|non-VEA, plot over
 training. This controls for the prompt (removes the between-question confound), so it is
 the honest per-question eval-gaming signal. SFT (top) / RLVR (bottom).
-Reads ../data/refusal_haiku.jsonl.
+Reads data/{sft,dpo,rlvr}/refusal.jsonl (REFUSAL_FILE=old/refusal_haiku.jsonl for the v1 Haiku labels).
 """
 import json
 from collections import defaultdict
@@ -22,7 +22,7 @@ MIN = 2
 
 def main():
     import os as _os
-    R = [json.loads(l) for l in open(P.d(_os.environ.get("REFUSAL_FILE", "refusal_gpt5mini.jsonl")))]
+    R = P.refusal_rows()
     R = [r for r in R if r.get("ok") and not r.get("no_answer")
          and r.get("refusal") is not None and r.get("vea") is not None
          and r.get("benchmark") == "fortress"]

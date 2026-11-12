@@ -22,7 +22,7 @@ STEPS = [50, 300, 550, 800, 1050, 1300, 1550, 1800, 2050, 2300]
 def load():
     rows = {}
     ok = lambda r: r.get("ok") and not r.get("no_answer") and r.get("refusal") is not None and r.get("vea") is not None
-    for r in map(json.loads, open(os.path.join(ROOT, "data/refusal_gpt5mini.jsonl"))):
+    for r in map(json.loads, open(os.path.join(ROOT, "data/rlvr/refusal.jsonl"))):
         if r["stage"] == "rlvr" and r["benchmark"] == "fortress" and ok(r):
             rows[(r["step"], r["prompt_id"], r["rollout_id"])] = r
     for s in STEPS:  # rerun files override (includes 300/800 re-sampled)

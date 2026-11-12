@@ -23,7 +23,7 @@ def rate(rows):
 
 
 def main():
-    st = [r for r in map(json.loads, open(P.d("stage_vea.jsonl"))) if r.get("ok")]
+    st = [r for r in P.rows("vea.jsonl", "sft", "dpo") if r.get("ok")]
     m_sft = rate([r for r in st if r["stage"] == "sft" and r["step"] == 10000])
     m_dpo = rate([r for r in st if r["stage"] == "dpo"])
     d_sft = (DATA_SFT, 196 * np.sqrt(.21 * .79 / N_DATA))

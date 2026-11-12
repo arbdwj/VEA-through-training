@@ -2,7 +2,7 @@
 
 OLMo-3.1-32B-Think RLVR sweep (steps 50..2300). One curve per benchmark. CIs are by-prompt
 cluster bootstrap (rollouts nested in prompts; ICC ~0.45 -> naive CIs would be ~2x too narrow).
-Reads ../data/rlvr_fortress_vea.jsonl + ../data/rlvr_bench_vea.jsonl.
+Reads data/rlvr/vea.jsonl.
 """
 import json
 from collections import defaultdict
@@ -23,16 +23,12 @@ def load():
     # (benchmark, step) -> prompt_id -> [0/1 vea outcomes]
     g = defaultdict(lambda: defaultdict(list))
     nrows = defaultdict(int)
-    for fp, force in [(P.d("rlvr_fortress_vea.jsonl"), "fortress"),
-                      (P.d("rlvr_bench_vea.jsonl"), None)]:
-        for l in open(fp):
-            r = json.loads(l)
-            if not r.get("ok"):
-                continue
-            bm = force or r["benchmark"]
-            k = (bm, r["step"])
-            g[k][r["prompt_id"]].append(int(bool(r["vea"])))
-            nrows[k] += 1
+    for r in P.rows("vea.jsonl", "rlvr"):
+        if not r.get("ok"):
+            continue
+        k = (r["benchmark"], r["step"])
+        g[k][r["prompt_id"]].append(int(bool(r["vea"])))
+        nrows[k] += 1
     return g, nrows
 
 

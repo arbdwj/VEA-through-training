@@ -5,7 +5,7 @@ VEA | all  = VEA hits / all 3552 rollouts                  (no-</think> = False)
 CIs are by-prompt cluster bootstrap (rollouts nested in prompts; ICC ~0.45 -> naive CIs
 would be ~2x too narrow). Reference (Haiku judge, 20480 ctx): released base `main` = 8.84%.
 
-Reads ../data/pretrain_rollouts/*.jsonl + ../data/pretrain_vea_judgments.jsonl.
+Reads data/pretrain/rollouts/*.jsonl + data/pretrain/vea.jsonl.
 """
 import glob
 import json
@@ -27,7 +27,7 @@ BASE_MAIN_VEA = 8.84
 def main():
     # VEA-positive rollouts (step, prompt_id, rollout_id)
     vea_pos = set()
-    for l in open(P.d("pretrain_vea_judgments.jsonl")):
+    for l in open(P.d("pretrain", "vea.jsonl")):
         j = json.loads(l)
         if j.get("ok") and j.get("vea"):
             vea_pos.add((j["step"], j["prompt_id"], j["rollout_id"]))
@@ -37,7 +37,7 @@ def main():
     g_cot = defaultdict(lambda: defaultdict(list))
     think = defaultdict(int)
     tot = defaultdict(int)
-    for fp in glob.glob(P.d("pretrain_rollouts", "stage_rollouts_pretrain_step*.jsonl")):
+    for fp in glob.glob(P.d("pretrain", "rollouts", "stage_rollouts_pretrain_step*.jsonl")):
         s = int(re.search(r"step(\d+)", fp).group(1))
         for l in open(fp):
             r = json.loads(l)

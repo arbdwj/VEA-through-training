@@ -1,6 +1,6 @@
 """Figure 7 — First-VEA-token by benchmark: blunt prompts trigger eval-awareness earlier.
 
-CDF of the first-VEA-token index per benchmark. Reads ../data/vea_first_token.csv.
+CDF of the first-VEA-token index per benchmark. Reads data/rlvr/vea_first_token.csv.
 """
 import csv
 from collections import defaultdict
@@ -19,7 +19,7 @@ COL = {"jbb": "tab:orange", "advbench": "tab:green", "agentharm": "tab:purple",
 ORDER = ["jbb", "advbench", "agentharm", "harmfulqa", "fortress"]
 
 by = defaultdict(list)
-with open(P.d("vea_first_token.csv")) as f:
+with open(P.d("rlvr", "vea_first_token.csv")) as f:
     for row in csv.DictReader(f):
         by[row["benchmark"]].append(float(row["first_tok"]))
 

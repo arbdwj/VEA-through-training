@@ -10,10 +10,10 @@ KEY = lambda r: (r["step"], r["prompt_id"], r["rollout_id"])
 
 
 def main():
-    rows = [json.loads(l) for p in sorted(glob.glob(str(paths.DATA / "pretrain_rollouts" / "*.jsonl"))) for l in open(p)]
+    rows = [json.loads(l) for p in sorted(glob.glob(str(paths.DATA / "pretrain" / "rollouts" / "*.jsonl"))) for l in open(p)]
     total = collections.Counter(r["step"] for r in rows)
     cot = collections.Counter(r["step"] for r in rows if "</think>" in r["completion"])
-    gem = {KEY(r): r for r in map(json.loads, open(paths.ARCHIVE_V1 / "pretrain_vea_judgments.jsonl")) if r.get("ok")}
+    gem = {KEY(r): r for r in map(json.loads, open(paths.ARCHIVE_V1 / "pretrain" / "vea.jsonl")) if r.get("ok")}
     gpt = {KEY(r): r for r in map(json.loads, open(paths.OUTPUTS / "pretrain_vea_gpt5mini.jsonl")) if r.get("ok")}
     both = set(gem) & set(gpt)
     pc = lambda a, b: f"{100 * a / b:.2f}%" if b else "–"

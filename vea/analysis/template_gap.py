@@ -33,10 +33,7 @@ def eval_rows(step):
         r = rd(os.path.join(J, f"{key}.jsonl"))
         if r:
             return r
-    rows = [r for r in rd(os.path.join(ROOT, "data/rlvr_bench_vea.jsonl")) if r["step"] == step]
-    rows += [dict(r, benchmark="fortress", prompt_id=f"fortress_{r['prompt_id']}")
-             for r in rd(os.path.join(ROOT, "data/rlvr_fortress_vea.jsonl")) if r["step"] == step]
-    return rows
+    return [r for r in rd(os.path.join(ROOT, "data/rlvr/vea.jsonl")) if r["step"] == step]
 
 
 def self_open(key):
@@ -48,7 +45,7 @@ def main():
     PAIRS = {}  # name -> (train rows, eval rows, raw key for self-open)
     for s in range(1000, 10001, 1000):
         # v1 SFT run = training template
-        tr = [r for r in rd(os.path.join(ROOT, "archive/v1/data/stage_vea.jsonl")) if r["stage"] == "sft" and r["step"] == s]
+        tr = [r for r in rd(os.path.join(ROOT, "archive/v1/data/sft/vea.jsonl")) if r["stage"] == "sft" and r["step"] == s]
         PAIRS[f"SFT {s}"] = (tr, rd(os.path.join(J, f"sft_5e-5_step{s:05d}.jsonl")), f"sft_5e-5_step{s:05d}")
     for s in (50, 300, 550, 800, 1050, 1300, 1550, 1800, 2050, 2300):
         tr = rd(os.path.join(J, f"rlvrtrain_step_{s:04d}.jsonl"))

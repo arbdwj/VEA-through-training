@@ -39,9 +39,16 @@ vea/            library behind the four scripts
   analysis/       build_data, compare, template_gap, eval_gaming, pretrain_judges
   figures/        one script per figure (run via analyze.py figures)
   progress_server.py   live generation progress: python -m vea.progress_server
-data/           corrected data (input to every figure)
+data/           corrected data (input to every figure), one folder per stage:
+  prompts/        bench_prompts.jsonl, fortress_prompts.jsonl (the 444 prompts)
+  pretrain/       rollouts/, vea.jsonl
+  base/           vea.jsonl
+  sft/            vea.jsonl (SFT steps + merge), refusal.jsonl, training_data_vea.jsonl
+  dpo/            vea.jsonl, refusal.jsonl, training_data_vea.jsonl
+  rlvr/           vea.jsonl, refusal.jsonl, vea_first_token.csv, vea_position*.csv
+                  every row has stage, step, benchmark, prompt_id (Fortress ids are fortress_<n>)
 figures/        corrected figures; v1_vs_v2/ = each published figure next to its fix
-archive/v1/     as published: data/, figures/, and code/ (v1-only one-offs, kept for provenance)
+archive/v1/     as published: data/ (same stage layout), figures/, and code/ (v1-only one-offs, kept for provenance)
 outputs/        raw rollouts and labels (gitignored; large)
 ```
 

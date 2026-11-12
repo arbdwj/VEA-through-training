@@ -51,11 +51,7 @@ def rlvr_eval(step):
     p = os.path.join(J, f"rlvr_step_{step:04d}.jsonl")
     if os.path.exists(p):
         return rd(p)
-    D2 = P.DATA
-    rows = [r for r in rd(os.path.join(D2, "rlvr_bench_vea.jsonl")) if r["step"] == step]
-    rows += [dict(r, prompt_id=f"fortress_{r['prompt_id']}")
-             for r in rd(os.path.join(D2, "rlvr_fortress_vea.jsonl")) if r["step"] == step]
-    return rows
+    return [r for r in P.rows("vea.jsonl", "rlvr") if r["step"] == step]
 
 
 def eb(ax, x, d, key, **kw):
@@ -64,7 +60,7 @@ def eb(ax, x, d, key, **kw):
 
 
 def main():
-    stage = rd(os.path.join(ROOT, "archive/v1/data/stage_vea.jsonl"))  # v1 run = training template for SFT
+    stage = rd(os.path.join(ROOT, "archive/v1/data/sft/vea.jsonl"))  # v1 run = training template for SFT
     sft = []
     for s in range(1000, 10001, 1000):
         tr = [r for r in stage if r["stage"] == "sft" and r["step"] == s]

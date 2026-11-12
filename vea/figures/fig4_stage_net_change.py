@@ -5,7 +5,7 @@ Per-stage delta = (VEA at end of stage) - (VEA at start of stage):
   ΔSFT  = SFT(step10000) - SFT(step1000)
   ΔDPO  = DPO            - SFT(step10000)
   ΔRLVR = RLVR(step2300) - DPO
-Reads ../data/stage_vea.jsonl, ../data/rlvr_bench_vea.jsonl, ../data/rlvr_fortress_vea.jsonl.
+Reads data/{sft,dpo,rlvr}/vea.jsonl.
 """
 import json
 
@@ -39,10 +39,10 @@ def rate(rows, bm, step=None):
 
 
 def main():
-    stage = load(P.d("stage_vea.jsonl"))
-    sft = [r for r in stage if r.get("stage") == "sft"]
-    dpo = [r for r in stage if r.get("stage") == "dpo"]
-    rlvr = load(P.d("rlvr_bench_vea.jsonl")) + load(P.d("rlvr_fortress_vea.jsonl"), force_bm="fortress")
+    ok = lambda rows: [r for r in rows if r.get("ok")]
+    sft = [r for r in ok(P.rows("vea.jsonl", "sft")) if r.get("stage") == "sft"]
+    dpo = ok(P.rows("vea.jsonl", "dpo"))
+    rlvr = ok(P.rows("vea.jsonl", "rlvr"))
 
     def anchors(bm):
         return {"sft0": rate(sft, bm, SFT0), "sft1": rate(sft, bm, SFT1),

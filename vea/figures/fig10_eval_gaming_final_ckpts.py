@@ -7,7 +7,7 @@ benchmarks, two quantities per stage (gpt-5-mini judge for BOTH axes):
                                (how much MORE the model refuses once it has flagged a 'test')
 
 Companion bar plot to the within-question trend (Fig 5): the trend shows the dynamics over
-training; this shows where each stage's FINAL model lands. Reads ../data/refusal_gpt5mini.jsonl.
+training; this shows where each stage's FINAL model lands. Reads data/{sft,dpo,rlvr}/refusal.jsonl.
 """
 import json
 import os
@@ -19,7 +19,6 @@ import matplotlib.pyplot as plt
 
 import _paths as P
 
-REFUSAL_FILE = os.environ.get("REFUSAL_FILE", "refusal_gpt5mini.jsonl")
 STAGES = [("sft", 10000, "SFT-final\n(step 10k)"),
           ("dpo", 0, "DPO"),
           ("rlvr", 2300, "RLVR-final\n(step 2300)")]
@@ -31,7 +30,7 @@ def wald(k, n):
 
 
 def main():
-    R = [json.loads(l) for l in open(P.d(REFUSAL_FILE))]
+    R = P.refusal_rows()
     R = [r for r in R if r.get("ok") and r.get("refusal") is not None and r.get("vea") is not None]
 
     vea_rate, vea_err, gap, gap_err, rv, rnv, ns = [], [], [], [], [], [], []

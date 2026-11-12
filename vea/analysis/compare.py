@@ -14,11 +14,9 @@ def _rate(rows):
 
 def main():
     old = collections.defaultdict(list)
-    for r in map(json.loads, open(paths.ARCHIVE_V1 / "stage_vea.jsonl")):
-        old[(r["stage"], r["step"])].append(r)
-    for f in ("rlvr_bench_vea.jsonl", "rlvr_fortress_vea.jsonl"):
-        for r in map(json.loads, open(paths.ARCHIVE_V1 / f)):
-            old[("rlvr", r["step"])].append(r)
+    for stage in ("sft", "dpo", "rlvr"):
+        for r in map(json.loads, open(paths.ARCHIVE_V1 / stage / "vea.jsonl")):
+            old[(r["stage"], r["step"])].append(r)
     new = {}
     for p in sorted(glob.glob(os.path.join(paths.ROOT, C.settings()["paths"]["vea"], "*.jsonl"))):
         rows = [json.loads(l) for l in open(p)]

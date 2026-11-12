@@ -6,7 +6,7 @@
   python judge.py vea                                    # every finished generation job
   python judge.py refusal --model rlvr                   # refusal (Fortress) + joined VEA
   python judge.py refusal --calibrate                    # rubric vs v1 labels on unchanged DPO
-  python judge.py vea --input 'data/pretrain_rollouts/*.jsonl' \\
+  python judge.py vea --input 'data/pretrain/rollouts/*.jsonl' \\
         --output outputs/pretrain_vea_gpt5mini.jsonl --model pretrain    # arbitrary rollout files
 
 Judge model / effort / workers and output paths: configs/settings.yaml.
@@ -103,7 +103,7 @@ def calibrate(cfg, jcfg, benches, judge_fn, out_dir):
     out = os.path.join(out_dir, "_calib_dpo.jsonl")
     JG.run({out: [r for r in _rows(src) if r["benchmark"] in benches]}, judge_fn, _refusal_row(jcfg, lambda r: {}),
            jcfg, "calibrate")
-    old = {(r["prompt_id"], r["rollout_id"]): r for r in _rows(paths.ARCHIVE_V1 / "refusal_gpt5mini.jsonl")
+    old = {(r["prompt_id"], r["rollout_id"]): r for r in _rows(paths.ARCHIVE_V1 / "dpo" / "refusal.jsonl")
            if r["stage"] == "dpo" and r["benchmark"] in benches}
     new = {(r["prompt_id"], r["rollout_id"]): r for r in _rows(out)}
     pairs = [(old[k]["refusal"], new[k]["refusal"]) for k in new
