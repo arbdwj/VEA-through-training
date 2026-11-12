@@ -27,6 +27,7 @@ configs/
   models/         WHAT: pretrain, sft, dpo, rlvr. Identical fields in every file (schema-checked):
                   model, revision pattern, steps, output key, pinned template, dataset, default sampling
   tmp_configs/    ancillary experiments, same schema: sft_merge, rlvr_swap, rlvr_train (template gap)
+  sanity/         one checkpoint per stage, same schema; `analyze.py sanity` compares the re-run with data/
   sampling/       HOW: n, temperature, top_p, seed, context, token budgets (one per sweep)
                   standard (8k)  long_fortress (8k, Fortress 16k)  pretrain (2k in 8k context)
   settings.yaml   judge model/effort, local output paths, Modal infra

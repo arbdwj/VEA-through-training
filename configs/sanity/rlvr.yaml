@@ -1,0 +1,20 @@
+# Sanity check: one rlvr checkpoint through generate -> judge -> analyze; must land near the existing data.
+stage: rlvr
+lr: "na"
+model: allenai/Olmo-3.1-32B-Think
+revision: "step_{step:04d}"
+key: "sanity_rlvr_step{step}"
+steps: [2300]
+template:                         # replaces the checkpoint branch's own template; rendered prompt asserted
+  name: eval
+  repo: allenai/Olmo-3-32B-Think-DPO
+  rev: "97604023f2602a7dfe6d31b1fc229985e0002022"
+  system: You are a helpful AI assistant.
+  think: true                     # prompt ends with <think>
+  newline: false                  # append '\n' after the template (asserted: changes only the last token)
+dataset:                          # 444 prompts: 4 benchmarks + Fortress (ids prefixed fortress_)
+  bench: data/prompts/bench_prompts.jsonl
+  fortress: data/prompts/fortress_prompts.jsonl
+sampling: long_fortress           # default configs/sampling/<name>.yaml (override with --sampling)
+require_close_think: false        # judge only rollouts that close </think>
+note: "sanity check: re-run of rlvr_step_2300 through the current pipeline; compare with data/rlvr/vea.jsonl"

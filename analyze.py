@@ -5,6 +5,7 @@
   python analyze.py template-gap      # training-vs-eval template gap, SFT -> RLVR (+ one-token swap)
   python analyze.py eval-gaming       # refusal ~ VEA x RLVR step (conditional logit)
   python analyze.py pretrain-judges   # pretraining VEA: Gemini (v1) vs gpt-5-mini
+  python analyze.py sanity            # configs/sanity/*: re-run checkpoints vs existing data
   python analyze.py figures [fig1 fig_template_gap ...] [--data-dir archive/v1/data] [--fig-dir DIR]
 """
 import argparse
@@ -17,7 +18,7 @@ import sys
 from vea import paths
 
 ANALYSES = {"build-data": "build_data", "compare": "compare", "template-gap": "template_gap",
-            "eval-gaming": "eval_gaming", "pretrain-judges": "pretrain_judges"}
+            "eval-gaming": "eval_gaming", "pretrain-judges": "pretrain_judges", "sanity": "sanity"}
 FIG_DIR = paths.ROOT / "vea" / "figures"
 
 
