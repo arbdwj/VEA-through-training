@@ -5,7 +5,10 @@ import os
 
 SCRIPTS = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(SCRIPTS)
-DATA = os.path.join(ROOT, "data")
+# DATA can be redirected with DATA_DIR (e.g. data_v2 = template-fixed rerun)
+DATA = os.environ.get("DATA_DIR") or os.path.join(ROOT, "data")
+if not os.path.isabs(DATA):
+    DATA = os.path.join(ROOT, DATA)
 # FIG can be redirected with FIG_DIR (e.g. to regenerate into a parallel folder)
 FIG = os.environ.get("FIG_DIR") or os.path.join(ROOT, "figures")
 if not os.path.isabs(FIG):

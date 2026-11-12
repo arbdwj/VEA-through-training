@@ -18,3 +18,7 @@ venv/
 logs/
 logs_smoke/
 .DS_Store
+
+# raw rerun rollouts / judgments (large; live on the Modal volume)
+outputs/
+outputs

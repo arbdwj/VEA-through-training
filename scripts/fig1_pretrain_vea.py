@@ -9,6 +9,7 @@ Reads ../data/pretrain_rollouts/*.jsonl + ../data/pretrain_vea_judgments.jsonl.
 """
 import glob
 import json
+import os
 import re
 from collections import defaultdict
 
@@ -69,7 +70,8 @@ def main():
     ax.set_xlabel("pretraining step  (stage1, thousands)", fontsize=13)
     ax.set_ylabel("Verbalized eval-awareness rate (%)", fontsize=13)
     ymax = max(c[0] + c[2] for c in cot)
-    ax.set_ylim(-0.1, ymax * 1.5)
+    # FIG1_YMAX pins the axis (e.g. to the published v1's 3.2 for side-by-side comparison)
+    ax.set_ylim(-0.1, float(os.environ["FIG1_YMAX"]) if os.environ.get("FIG1_YMAX") else ymax * 1.5)
     ax.tick_params(labelsize=11)
     ax.grid(alpha=0.3)
     ax.legend(loc="upper left", fontsize=12)
