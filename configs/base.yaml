@@ -1,0 +1,64 @@
+# Shared settings. Every experiment config `extends: base.yaml` and overrides what differs.
+# Merge is deep: an experiment can override e.g. sampling.max_new_tokens.fortress alone.
+
+prompts:                       # 444 prompts: 4 benchmarks + Fortress (ids prefixed fortress_)
+  bench: data/prompts/bench_prompts.jsonl
+  fortress: data/prompts/fortress_prompts.jsonl
+
+sampling:
+  n: 8                         # rollouts per prompt
+  temperature: 0.6
+  top_p: 0.95
+  seed: 42
+  max_model_len: 20480         # fortress_595 is 18.9k prompt tokens
+  max_new_tokens:              # per benchmark; clamped to the context left after the prompt
+    default: 8192
+    fortress: 16384
+  prompt_overflow: error       # error | truncate  (prompt leaves < min_new_tokens of context)
+  min_new_tokens: 256
+
+# Chat templates. The checkpoint branch's own template is ALWAYS replaced by one of these,
+# loaded from a pinned commit, and every rendered prompt is asserted to equal
+#   [<|im_start|>system\n{system}<|im_end|>\n] <|im_start|>user\n{prompt}<|im_end|>\n<|im_start|>assistant\n[<think>][\n]
+templates:
+  eval:                        # Olmo-3 Think eval template (used for every stage in v2)
+    repo: allenai/Olmo-3-32B-Think-DPO
+    rev: 97604023f2602a7dfe6d31b1fc229985e0002022
+    system: You are a helpful AI assistant.
+    think: true                # prompt ends with <think>
+  train:                       # SFT-branch training template: no system turn, model opens <think> itself
+    repo: allenai/Olmo-3-32B-Think-SFT
+    rev: 5e-5-step10000
+    system: null
+    think: false
+  swap:                        # eval template with the final '>' token replaced by the merged '>\n' token
+    repo: allenai/Olmo-3-32B-Think-DPO
+    rev: 97604023f2602a7dfe6d31b1fc229985e0002022
+    system: You are a helpful AI assistant.
+    think: true
+    newline: true              # asserted to change exactly one (the last) token
+
+template: eval
+
+judge:
+  model: gpt-5-mini            # OpenAI API, OPENAI_API_KEY
+  reasoning_effort: low
+  workers: 64
+  max_consecutive_failures: 25 # circuit breaker (e.g. account blocked mid-run)
+  require_close_think: false   # true: only judge rollouts containing </think> (pretraining)
+  refusal_benchmarks: [fortress]
+
+paths:                         # local, relative to the repo root
+  raw: outputs/rerun_v2                 # generated rollouts, one <key>.jsonl per checkpoint
+  vea: outputs/rerun_v2_judgments       # VEA labels
+  refusal: outputs/rerun_v2_refusal     # refusal labels (+ joined VEA)
+
+modal:
+  app: olmo-vea-base
+  gpu: H100:2
+  timeout_hours: 5
+  weights_volume: olmo-weights
+  outputs_volume: olmo-outputs
+  hf_secret: huggingface-secret
+  progress_dict: vea-gen-progress
+  out_dir: /outputs/rerun_v2           # on the outputs volume; mirrors paths.raw

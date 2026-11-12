@@ -1,0 +1,14 @@
+# Pretraining (stage 1) checkpoints of the base model. It has no chat template of its own.
+extends: base.yaml
+stage: pretrain
+model: allenai/Olmo-3-1125-32B
+revision: "stage1-step{step}"
+key: "pretrain_step{step:07d}"
+steps: [0, 80000, 155000, 228000, 301000, 371000, 444000, 517000, 585000, 656000]
+sampling:
+  max_model_len: 8192          # native context of the stage-1 checkpoints
+  max_new_tokens: {default: 2048, fortress: 2048}   # base models ramble to the cap; VEA shows early
+  prompt_overflow: truncate    # the longest Fortress prompts exceed 8192 tokens
+judge:
+  require_close_think: true    # only rollouts that close </think> have a CoT to judge
+note: "pretraining checkpoint under the pinned eval template"

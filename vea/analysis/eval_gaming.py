@@ -13,7 +13,9 @@ import collections, glob, json, os, sys
 import numpy as np
 from statsmodels.discrete.conditional_models import ConditionalLogit
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+from vea import config as C, paths
+_cfg = C.base()
+ROOT = str(paths.ROOT)
 STEPS = [50, 300, 550, 800, 1050, 1300, 1550, 1800, 2050, 2300]
 
 
@@ -24,8 +26,8 @@ def load():
         if r["stage"] == "rlvr" and r["benchmark"] == "fortress" and ok(r):
             rows[(r["step"], r["prompt_id"], r["rollout_id"])] = r
     for s in STEPS:  # rerun files override (includes 300/800 re-sampled)
-        p = os.path.join(ROOT, f"outputs/rerun_v2_refusal/rlvr_step_{s:04d}.jsonl")
-        vp = os.path.join(ROOT, f"outputs/rerun_v2_judgments/rlvr_step_{s:04d}.jsonl")
+        p = os.path.join(ROOT, _cfg["paths"]["refusal"], f"rlvr_step_{s:04d}.jsonl")
+        vp = os.path.join(ROOT, _cfg["paths"]["vea"], f"rlvr_step_{s:04d}.jsonl")
         if not os.path.exists(p):
             continue
         vea = {(r["prompt_id"], r["rollout_id"]): r["vea"] for r in map(json.loads, open(vp))}

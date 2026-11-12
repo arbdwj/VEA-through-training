@@ -1,0 +1,6 @@
+# Template-gap experiment: RLVR under the one-token swap (<think> -> <think>\n).
+extends: rlvr.yaml
+stage: rlvr_swap
+template: swap
+key: "rlvrswap_step_{step:04d}"
+note: "template-gap: one-token swap '<think>' -> '<think>\\n'"

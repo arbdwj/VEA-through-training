@@ -1,0 +1,10 @@
+# Released DPO model.
+extends: base.yaml
+stage: dpo
+model: allenai/Olmo-3-32B-Think-DPO
+revision: 97604023f2602a7dfe6d31b1fc229985e0002022
+key: dpo_main
+steps: [0]
+sampling:
+  max_new_tokens: {default: 8192, fortress: 8192}
+note: "released DPO"

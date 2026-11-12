@@ -3,7 +3,7 @@
 For each VEA-positive RLVR rollout, a cheap Gemini pass returns the EARLIEST eval-aware span,
 which is then located and counted with the EXACT OLMo-3 tokenizer (offset mapping). This is
 the accurate 'first VEA token' (not the original judge's representative quote, not chars/4).
-Reads ../data/vea_first_token.csv (built by judging/refine_vea_first_token.py).
+Reads data/vea_first_token.csv (built by archive/v1/code/refine_vea_first_token.py).
 
 (A) distribution of the first-VEA-token index (exact tokens), with cumulative markers.
 (B) vs CoT length: first-VEA-token vs CoT length (hexbin) + median per length-decile.

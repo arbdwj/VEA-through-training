@@ -1,9 +1,9 @@
-"""Thin local progress UI for generation/gen_checkpoints.py.
+"""Thin local progress UI for generate.py / sweep.py.
 
 Reads the modal.Dict "vea-gen-progress" that the generation containers update and
 serves a self-refreshing page at http://localhost:8765 .
 
-  /opt/anaconda3/bin/python generation/progress_server.py [--port 8765]
+  python -m vea.progress_server [--port 8765]
 """
 import argparse
 import json
@@ -13,7 +13,8 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 import modal
 
-progress = modal.Dict.from_name("vea-gen-progress", create_if_missing=True)
+from vea import config as _C
+progress = modal.Dict.from_name(_C.base()["modal"]["progress_dict"], create_if_missing=True)
 _cache = {"t": 0.0, "data": None}
 _lock = threading.Lock()
 

@@ -1,0 +1,8 @@
+# RLVR checkpoints of Olmo-3.1-32B-Think under the pinned eval template.
+extends: base.yaml
+stage: rlvr
+model: allenai/Olmo-3.1-32B-Think
+revision: "step_{step:04d}"
+key: "rlvr_step_{step:04d}"
+steps: [50, 300, 550, 800, 1050, 1300, 1550, 1800, 2050, 2300]
+note: "RLVR checkpoint under the pinned eval template"

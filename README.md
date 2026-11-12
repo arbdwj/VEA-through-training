@@ -19,44 +19,49 @@ v2 re-samples every affected checkpoint with one pinned template (`allenai/Olmo-
 ## Layout
 
 ```
-data/             corrected data (default input for every figure)
-archive/v1/       as published: data/ and figures/
-figures/          corrected figures; v1_vs_v2/ = side-by-side with the published post
-plotting/         one script per figure (+ _paths, _stats, _axes helpers)
-generation/       Modal GPU sampling
-  gen_checkpoints.py   SFT / merge / DPO / RLVR checkpoints, pinned + asserted template
-                       (template = eval | train | swap for the template-gap experiment)
-  gen_pretrain.py      pretraining checkpoints of the base model
-  progress_server.py   local progress UI for gen_checkpoints (reads a modal.Dict)
-judging/
-  judge_vea.py         rubric, CoT extraction (shared library)
-  judge_vea_rerun.py   VEA judge for gen_checkpoints outputs (gpt-5-mini)
-  judge_refusal.py     refusal judge (decline-only rubric v2)
-  judge_pretrain.py    gpt-5-mini re-judge of pretraining rollouts
-  judge_pretrain_gemini_v1.py, refine_vea_first_token.py
-analysis/
-  build_data.py        archive/v1/data + rerun judgments -> data/
-  template_gap.py      training-vs-eval template gap through SFT and RLVR
-  eval_gaming_trend.py conditional-logit test of refusal ~ VEA × step
-  vea_position*.py, compare_sft_dpo_data.py
-outputs/          raw rollouts and judgments (gitignored; large)
+generate.py     one checkpoint      modal run generate.py --config configs/rlvr_swap.yaml --step 2300
+sweep.py        range of ckpts      modal run --detach sweep.py --config configs/rlvr_swap.yaml [--steps 50,800]
+judge.py        VEA / refusal       python judge.py vea --config configs/rlvr_swap.yaml
+analyze.py      analyses + figures  python analyze.py template-gap | figures | ...
+configs/        one YAML per experiment, all extending base.yaml
+  base.yaml       prompts, sampling, pinned templates (eval / train / swap), judge, paths, Modal infra
+  pretrain.yaml sft.yaml sft_merge.yaml dpo.yaml rlvr.yaml rlvr_swap.yaml rlvr_train.yaml
+vea/            library behind the four scripts
+  config.py       YAML (with `extends:`) -> per-checkpoint job
+  templates.py    pinned template, exact-string + one-token-swap assertions, token budgets
+  modal_app.py    Modal functions: CPU preflight, GPU sampling (vLLM, TP=2)
+  rubrics.py      Goodfire F1 VEA rubric, refusal rubric, CoT/answer extraction
+  judging.py      resumable parallel judge runner (gpt-5-mini)
+  analysis/       build_data, compare, template_gap, eval_gaming, pretrain_judges
+  figures/        one script per figure (run via analyze.py figures)
+  progress_server.py   live generation progress: python -m vea.progress_server
+data/           corrected data (input to every figure)
+figures/        corrected figures; v1_vs_v2/ = each published figure next to its fix
+archive/v1/     as published: data/, figures/, and code/ (v1-only one-offs, kept for provenance)
+outputs/        raw rollouts and labels (gitignored; large)
 ```
+
+A config describes an experiment: which model, the revision pattern (`step_{step:04d}`), the output
+key pattern, the template, sampling, and the list of `steps`. To add an experiment, copy a config.
 
 ## Reproduce
 
-Figures regenerate from `data/` alone, with no GPU or API needed:
+Figures and analyses run from `data/` alone (no GPU or API):
 ```bash
-pip install numpy pandas matplotlib scipy
-PY=python ./build.sh                                          # all figures -> figures/
-DATA_DIR=archive/v1/data FIG_DIR=/tmp/v1 PY=python ./build.sh # as-published versions
-cd plotting && python fig_template_gap.py                     # one figure
+pip install numpy pandas matplotlib scipy statsmodels pyyaml
+python analyze.py figures                                     # all figures -> figures/
+python analyze.py figures fig_template_gap                    # one figure
+python analyze.py figures --data-dir archive/v1/data --fig-dir /tmp/v1   # as-published versions
+python analyze.py template-gap
 ```
-`fig8` needs refusal labels on all 5 benchmarks at a step; the corrected data only has Fortress refusal labels for re-sampled steps, so it is skipped there and builds from `archive/v1/data`.
+`fig8` needs refusal labels on all 5 benchmarks at a step; the corrected data only has Fortress refusal labels
+for re-sampled steps, so it is skipped there and builds from `archive/v1/data`.
 
-Re-running the pipeline (needs Modal + `OPENAI_API_KEY`):
+Full pipeline (Modal + `OPENAI_API_KEY`):
 ```bash
-modal run generation/gen_checkpoints.py --mode preflight --keys sft_5e-5_step10000   # CPU: render + assert templates
-modal run --detach generation/gen_checkpoints.py --mode sample --keys sft_5e-5_step10000
-python judging/judge_vea_rerun.py judge --keys sft_5e-5_step10000
-python analysis/build_data.py
+modal run sweep.py --config configs/rlvr_swap.yaml --preflight     # CPU: render + assert every prompt
+modal run --detach sweep.py --config configs/rlvr_swap.yaml        # sample all steps in the config
+python judge.py vea --config configs/rlvr_swap.yaml                # pull from the volume + judge
+python judge.py refusal --config configs/rlvr_swap.yaml
+python analyze.py build-data && python analyze.py figures
 ```

@@ -1,7 +1,7 @@
 # Post figures: v1 (as published) vs v2 (template-fixed rerun)
 
 `__v1` = exact image from the published LessWrong post. `__v2_updated` = regenerated from the corrected `data/`
-(`analysis/build_data.py`), in which 10 SFT and 6 RLVR checkpoints were re-sampled with one pinned chat
+(`python analyze.py build-data`), in which 10 SFT and 6 RLVR checkpoints were re-sampled with one pinned chat
 template (`Olmo-3-32B-Think-DPO@9760402`) and every figure uses the gpt-5-mini judge.
 
 | Post figure | What changed |
@@ -14,6 +14,6 @@ template (`Olmo-3-32B-Think-DPO@9760402`) and every figure uses the gpt-5-mini j
 | Fig 5b model vs data | model SFT->DPO 40%->22% becomes 19%->22% |
 | Fig 6 eval-gaming | SFT/RLVR re-sampled ckpts relabelled; refusal rubric reconstructed (96.5% agreement with old labels on unchanged DPO) |
 
-Regenerate: `./build.sh` (corrected) or `DATA_DIR=archive/v1/data FIG_DIR=<dir> ./build.sh` (as published).
+Regenerate: `python analyze.py figures` (corrected) or `python analyze.py figures --data-dir archive/v1/data --fig-dir <dir>` (as published).
 
 `fig_template_gap_rlvr.png` is new in v2 (no v1 counterpart): VEA under the training template / one-token swap vs the eval template, SFT through RLVR.

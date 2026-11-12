@@ -1,11 +1,11 @@
 """Shared path resolution so every figure script is self-contained:
-data lives in ../data (corrected; set DATA_DIR=archive/v1/data for the as-published data),
-figures are written to ../figures, relative to this file.
+data lives in <repo>/data (corrected; set DATA_DIR=archive/v1/data for the as-published data),
+figures are written to <repo>/figures, relative to this file.
 """
 import os
 
 SCRIPTS = os.path.dirname(os.path.abspath(__file__))
-ROOT = os.path.dirname(SCRIPTS)
+ROOT = os.path.dirname(os.path.dirname(SCRIPTS))
 # DATA can be redirected with DATA_DIR (e.g. archive/v1/data = as published)
 DATA = os.environ.get("DATA_DIR") or os.path.join(ROOT, "data")
 if not os.path.isabs(DATA):
