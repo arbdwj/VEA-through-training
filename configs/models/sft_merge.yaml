@@ -1,0 +1,18 @@
+# Released SFT = 50/50 weight average of the 5e-5 and 1e-4 runs; DPO's actual parent.
+stage: sft_merge
+lr: merge
+model: allenai/Olmo-3-32B-Think-SFT
+revision: a6d7f3cf497c7049712c13a664c65c7992f2da0c
+key: sftmerge_main
+steps: [0]
+template:                      # replaces the checkpoint branch's own template; asserted per prompt
+  name: eval
+  repo: allenai/Olmo-3-32B-Think-DPO
+  rev: 97604023f2602a7dfe6d31b1fc229985e0002022
+  system: You are a helpful AI assistant.
+  think: true                  # prompt ends with <think>
+dataset:                       # 444 prompts: 4 benchmarks + Fortress (ids prefixed fortress_)
+  bench: data/prompts/bench_prompts.jsonl
+  fortress: data/prompts/fortress_prompts.jsonl
+sampling: standard
+note: "released SFT (merge), DPO's starting point"

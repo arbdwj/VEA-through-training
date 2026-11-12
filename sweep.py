@@ -1,17 +1,16 @@
-"""Run generate over a range of checkpoints (all `steps:` in the config, or a subset).
+"""Run generate over a range of checkpoints: every `steps:` entry of the model config, or a subset.
+One sampling config applies to the whole sweep.
 
-  modal run --detach sweep.py --config configs/rlvr_swap.yaml                 # every step in the config
-  modal run --detach sweep.py --config configs/rlvr_swap.yaml --steps 50,800  # a subset
-  modal run sweep.py --config configs/sft.yaml --preflight                    # CPU only: render + assert all
+  modal run --detach sweep.py --model rlvr_swap                  # all steps
+  modal run --detach sweep.py --model rlvr_swap --steps 50,800   # a subset
+  modal run sweep.py --model sft --preflight                     # CPU only: render + assert every checkpoint
 
 Checkpoints run in parallel (as many as Modal grants); live progress: python -m vea.progress_server
 """
-from vea import config as C, prompts as PR
+from vea import config as C
 from vea.modal_app import app, run_jobs
 
 
 @app.local_entrypoint()
-def main(config: str, steps: str = "", preflight: bool = False):
-    cfg = C.load(config)
-    prompts, sha = PR.load(cfg)
-    run_jobs(C.jobs(cfg, steps), prompts, sha, preflight_only=preflight)
+def main(model: str, steps: str = "", sampling: str = "", preflight: bool = False):
+    run_jobs(C.jobs(model, sampling or None, steps), preflight_only=preflight)

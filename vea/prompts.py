@@ -5,12 +5,13 @@ import json
 from vea import paths
 
 
-def load(cfg):
+def load(dataset):
+    """dataset: {'bench': path, 'fortress': path} from a model config."""
     prompts = []
-    for l in open(paths.ROOT / cfg["prompts"]["bench"]):
+    for l in open(paths.ROOT / dataset["bench"]):
         r = json.loads(l)
         prompts.append({"prompt_id": r["prompt_id"], "benchmark": r["benchmark"], "prompt": r["prompt"]})
-    for l in open(paths.ROOT / cfg["prompts"]["fortress"]):
+    for l in open(paths.ROOT / dataset["fortress"]):
         r = json.loads(l)
         p = {"prompt_id": f"fortress_{r['prompt_id']}", "benchmark": "fortress", "prompt": r["prompt"]}
         if "risk_domain" in r:

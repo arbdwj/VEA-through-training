@@ -14,7 +14,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import modal
 
 from vea import config as _C
-progress = modal.Dict.from_name(_C.base()["modal"]["progress_dict"], create_if_missing=True)
+progress = modal.Dict.from_name(_C.settings()["modal"]["progress_dict"], create_if_missing=True)
 _cache = {"t": 0.0, "data": None}
 _lock = threading.Lock()
 

@@ -1,0 +1,11 @@
+# Pretraining checkpoints: 8k native context; base models ramble to the cap, VEA shows early.
+n: 8
+temperature: 0.6
+top_p: 0.95
+seed: 42
+max_model_len: 8192
+max_new_tokens:
+  default: 2048
+  fortress: 2048
+prompt_overflow: truncate      # the longest Fortress prompts exceed 8192 tokens
+min_new_tokens: 256

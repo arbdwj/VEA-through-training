@@ -1,0 +1,17 @@
+# Released DPO model.
+stage: dpo
+model: allenai/Olmo-3-32B-Think-DPO
+revision: 97604023f2602a7dfe6d31b1fc229985e0002022
+key: dpo_main
+steps: [0]
+template:                      # replaces the checkpoint branch's own template; asserted per prompt
+  name: eval
+  repo: allenai/Olmo-3-32B-Think-DPO
+  rev: 97604023f2602a7dfe6d31b1fc229985e0002022
+  system: You are a helpful AI assistant.
+  think: true                  # prompt ends with <think>
+dataset:                       # 444 prompts: 4 benchmarks + Fortress (ids prefixed fortress_)
+  bench: data/prompts/bench_prompts.jsonl
+  fortress: data/prompts/fortress_prompts.jsonl
+sampling: standard
+note: "released DPO"

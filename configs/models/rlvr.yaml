@@ -1,0 +1,17 @@
+# RLVR checkpoints of Olmo-3.1-32B-Think.
+stage: rlvr
+model: allenai/Olmo-3.1-32B-Think
+revision: "step_{step:04d}"
+key: "rlvr_step_{step:04d}"
+steps: [50, 300, 550, 800, 1050, 1300, 1550, 1800, 2050, 2300]
+template:                      # replaces the checkpoint branch's own template; asserted per prompt
+  name: eval
+  repo: allenai/Olmo-3-32B-Think-DPO
+  rev: 97604023f2602a7dfe6d31b1fc229985e0002022
+  system: You are a helpful AI assistant.
+  think: true                  # prompt ends with <think>
+dataset:                       # 444 prompts: 4 benchmarks + Fortress (ids prefixed fortress_)
+  bench: data/prompts/bench_prompts.jsonl
+  fortress: data/prompts/fortress_prompts.jsonl
+sampling: long_fortress        # default sampling config (override with --sampling)
+note: "RLVR checkpoint under the pinned eval template"

@@ -20,7 +20,7 @@ def main():
         for r in map(json.loads, open(paths.ARCHIVE_V1 / f)):
             old[("rlvr", r["step"])].append(r)
     new = {}
-    for p in sorted(glob.glob(os.path.join(paths.ROOT, C.base()["paths"]["vea"], "*.jsonl"))):
+    for p in sorted(glob.glob(os.path.join(paths.ROOT, C.settings()["paths"]["vea"], "*.jsonl"))):
         rows = [json.loads(l) for l in open(p)]
         if rows:
             new[os.path.basename(p)[:-6]] = rows

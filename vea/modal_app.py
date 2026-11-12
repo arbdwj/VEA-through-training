@@ -1,6 +1,6 @@
 """Modal app: GPU sampling for one checkpoint, and a CPU preflight that renders + asserts
-every prompt. Infra settings come from configs/base.yaml (`modal:`); everything about the
-experiment comes in the job dict built by vea.config.job().
+every prompt. Infra settings come from configs/settings.yaml (`modal:`); everything about the
+experiment comes in the job dict built by vea.config.jobs().
 """
 import hashlib
 import json
@@ -11,13 +11,13 @@ from pathlib import Path
 import modal
 import yaml
 
-_BASE = Path(__file__).resolve().parents[1] / "configs" / "base.yaml"
-M = yaml.safe_load(_BASE.read_text())["modal"]
+_SETTINGS = Path(__file__).resolve().parents[1] / "configs" / "settings.yaml"
+M = yaml.safe_load(_SETTINGS.read_text())["modal"]
 
 app = modal.App(M["app"])   # reuse the granted app name (new names lack volume write access)
 
 _local = lambda img: (img.add_local_python_source("vea")
-                      .add_local_file(str(_BASE), "/root/configs/base.yaml"))
+                      .add_local_file(str(_SETTINGS), "/root/configs/settings.yaml"))
 gpu_image = _local(
     modal.Image.from_registry("nvidia/cuda:12.6.0-devel-ubuntu22.04", add_python="3.12")
     .apt_install("git", "build-essential")
@@ -140,7 +140,8 @@ def generate_ckpt(job, prompts, prompts_sha):
                            "template": spec["name"], "template_repo": spec["repo"], "template_rev": spec["rev"],
                            "rendered_prompt": text, "rendered_prompt_sha256": rsha, "prompts_sha256": prompts_sha,
                            "temperature": s["temperature"], "top_p": s["top_p"], "seed": s["seed"],
-                           "max_new_tokens": cap, "config": job["config"]}
+                           "max_new_tokens": cap, "model_config": job["model_config"],
+                           "sampling_config": job["sampling_config"]}
                     if "risk_domain" in p:
                         row["risk_domain"] = p["risk_domain"]
                     f.write(json.dumps(row) + "\n")
@@ -156,8 +157,13 @@ def generate_ckpt(job, prompts, prompts_sha):
         raise
 
 
-def run_jobs(jobs, prompts, sha, preflight_only=False):
+def run_jobs(jobs, preflight_only=False):
     """Local side: preflight every job on CPU, then (unless preflight_only) sample them in parallel."""
+    from vea import prompts as PR
+    if len({json.dumps(j["dataset"], sort_keys=True) for j in jobs}) != 1:
+        raise ValueError("all jobs in one run must share a dataset")
+    prompts, sha = PR.load(jobs[0]["dataset"])
+    print(f"model config: {jobs[0]['model_config']} | sampling config: {jobs[0]['sampling_config']}")
     print(f"{len(prompts)} prompts (sha {sha[:12]}), {len(jobs)} checkpoint(s): {', '.join(j['key'] for j in jobs)}")
     r = preflight.remote(jobs, prompts)
     for x in r["results"]:

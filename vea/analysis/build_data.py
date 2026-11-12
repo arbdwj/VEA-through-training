@@ -10,7 +10,7 @@ Everything else is copied unchanged.
 """
 import glob, json, os, shutil
 from vea import config as C, paths
-_cfg = C.base()
+_cfg = C.settings()
 ROOT = str(paths.ROOT)
 SRC, DST = os.path.join(ROOT, "archive", "v1", "data"), os.path.join(ROOT, "data")
 J, R = os.path.join(ROOT, _cfg["paths"]["vea"]), os.path.join(ROOT, _cfg["paths"]["refusal"])

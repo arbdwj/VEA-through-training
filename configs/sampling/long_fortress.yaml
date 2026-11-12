@@ -1,0 +1,11 @@
+# RLVR sweep: long CoTs, so Fortress gets 16k new tokens.
+n: 8                           # rollouts per prompt
+temperature: 0.6
+top_p: 0.95
+seed: 42
+max_model_len: 20480           # fortress_595 is 18.9k prompt tokens
+max_new_tokens:                # per benchmark; clamped to the context left after the prompt
+  default: 8192
+  fortress: 16384
+prompt_overflow: error         # error | truncate  (prompt leaves < min_new_tokens of context)
+min_new_tokens: 256

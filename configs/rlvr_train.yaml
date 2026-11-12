@@ -1,6 +1,0 @@
-# Template-gap experiment: RLVR under the SFT training template.
-extends: rlvr.yaml
-stage: rlvr_traintmpl
-template: train
-key: "rlvrtrain_step_{step:04d}"
-note: "template-gap: training template (no system, no <think>)"

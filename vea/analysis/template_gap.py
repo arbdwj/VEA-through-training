@@ -11,7 +11,7 @@ import collections, json, os
 import numpy as np
 
 from vea import config as C, paths
-_cfg = C.base()
+_cfg = C.settings()
 ROOT = str(paths.ROOT)
 J, RAW = os.path.join(ROOT, _cfg["paths"]["vea"]), os.path.join(ROOT, _cfg["paths"]["raw"])
 

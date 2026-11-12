@@ -1,13 +1,15 @@
 """Judge generated rollouts (gpt-5-mini; settings under `judge:` in the config).
 
-  python judge.py vea --config configs/rlvr_swap.yaml              # every step in the config
-  python judge.py vea --config configs/rlvr_swap.yaml --steps 50,800
+  python judge.py vea --model rlvr_swap                  # every step in configs/models/rlvr_swap.yaml
+  python judge.py vea --model rlvr_swap --steps 50,800
   python judge.py vea --keys sft_5e-5_step10000,rlvr_step_0050
-  python judge.py vea                                               # every finished generation job
-  python judge.py refusal --config configs/rlvr.yaml                # refusal (Fortress) + joined VEA
-  python judge.py refusal --calibrate                               # rubric vs v1 labels on unchanged DPO
+  python judge.py vea                                    # every finished generation job
+  python judge.py refusal --model rlvr                   # refusal (Fortress) + joined VEA
+  python judge.py refusal --calibrate                    # rubric vs v1 labels on unchanged DPO
   python judge.py vea --input 'data/pretrain_rollouts/*.jsonl' \\
-        --output outputs/pretrain_vea_gpt5mini.jsonl --config configs/pretrain.yaml   # arbitrary rollout files
+        --output outputs/pretrain_vea_gpt5mini.jsonl --model pretrain    # arbitrary rollout files
+
+Judge model / effort / workers and output paths: configs/settings.yaml.
 
 Raw rollouts are pulled from the Modal outputs volume into paths.raw if missing. Labels go to
 paths.vea/<key>.jsonl and paths.refusal/<key>.jsonl. Resumable: re-run to finish or retry.
@@ -28,11 +30,11 @@ def _rows(path):
     return [json.loads(l) for l in open(path)]
 
 
-def _keys(args, cfg):
+def _keys(args):
     if args.keys:
         return [k.strip() for k in args.keys.split(",") if k.strip()]
-    if args.config:
-        return [j["key"] for j in C.jobs(cfg, args.steps)]
+    if args.model:
+        return C.keys(C.load_model(args.model), args.steps)
     return None
 
 
@@ -42,9 +44,10 @@ def vea(args, cfg):
         rows = [r for p in sorted(glob.glob(os.path.join(ROOT, args.input))) for r in _rows(p)]
         tasks = {os.path.join(ROOT, args.output): rows}
     else:
-        keys = _keys(args, cfg) or JG.finished_keys(cfg)
+        keys = _keys(args) or JG.finished_keys(cfg)
         tasks = {os.path.join(ROOT, cfg["paths"]["vea"], f"{k}.jsonl"): _rows(JG.pull(k, cfg, ROOT)) for k in keys}
-    if jcfg["require_close_think"]:                    # no CoT to judge -> VEA=False by construction, not written
+    if args.model and C.load_model(args.model).get("judge_require_close_think"):
+        # no CoT to judge -> VEA=False by construction, not written
         tasks = {p: [r for r in rows if "</think>" in r["completion"]] for p, rows in tasks.items()}
 
     def make_row(r, res):
@@ -72,7 +75,7 @@ def refusal(args, cfg):
     if args.calibrate:
         calibrate(cfg, jcfg, benches, judge_fn, out_dir)
         return
-    keys = _keys(args, cfg)
+    keys = _keys(args)
     raw_dir = os.path.join(ROOT, cfg["paths"]["raw"])
     if keys is None:                                   # every local raw file
         keys = sorted(os.path.basename(p)[:-6] for p in glob.glob(os.path.join(raw_dir, "*.jsonl")))
@@ -114,15 +117,15 @@ def calibrate(cfg, jcfg, benches, judge_fn, out_dir):
 if __name__ == "__main__":
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("what", choices=["vea", "refusal"])
-    ap.add_argument("--config", help="experiment config (defaults to base.yaml for judge settings)")
-    ap.add_argument("--steps", default="", help="subset of the config's steps, e.g. 50,800")
-    ap.add_argument("--keys", default="", help="explicit checkpoint keys instead of --config")
+    ap.add_argument("--model", help="model config name/path: which checkpoints (keys) to judge")
+    ap.add_argument("--steps", default="", help="subset of the model config's steps, e.g. 50,800")
+    ap.add_argument("--keys", default="", help="explicit checkpoint keys instead of --model")
     ap.add_argument("--input", help="glob of rollout files (vea only); requires --output")
     ap.add_argument("--output")
     ap.add_argument("--workers", type=int)
     ap.add_argument("--calibrate", action="store_true", help="refusal only")
     a = ap.parse_args()
-    cfg = C.load(a.config) if a.config else C.base()
+    cfg = C.settings()
     if a.workers:
         cfg["judge"]["workers"] = a.workers
     if a.input and not a.output:

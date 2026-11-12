@@ -14,7 +14,7 @@ import numpy as np
 from statsmodels.discrete.conditional_models import ConditionalLogit
 
 from vea import config as C, paths
-_cfg = C.base()
+_cfg = C.settings()
 ROOT = str(paths.ROOT)
 STEPS = [50, 300, 550, 800, 1050, 1300, 1550, 1800, 2050, 2300]
 

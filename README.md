@@ -19,13 +19,16 @@ v2 re-samples every affected checkpoint with one pinned template (`allenai/Olmo-
 ## Layout
 
 ```
-generate.py     one checkpoint      modal run generate.py --config configs/rlvr_swap.yaml --step 2300
-sweep.py        range of ckpts      modal run --detach sweep.py --config configs/rlvr_swap.yaml [--steps 50,800]
-judge.py        VEA / refusal       python judge.py vea --config configs/rlvr_swap.yaml
+generate.py     one checkpoint      modal run generate.py --model rlvr_swap --step 2300 [--sampling long_fortress]
+sweep.py        range of ckpts      modal run --detach sweep.py --model rlvr_swap [--steps 50,800]
+judge.py        VEA / refusal       python judge.py vea --model rlvr_swap
 analyze.py      analyses + figures  python analyze.py template-gap | figures | ...
-configs/        one YAML per experiment, all extending base.yaml
-  base.yaml       prompts, sampling, pinned templates (eval / train / swap), judge, paths, Modal infra
-  pretrain.yaml sft.yaml sft_merge.yaml dpo.yaml rlvr.yaml rlvr_swap.yaml rlvr_train.yaml
+configs/
+  models/         WHAT: model repo, revision pattern, steps, output key, pinned template, dataset
+                  pretrain sft sft_merge dpo rlvr rlvr_swap rlvr_train
+  sampling/       HOW: n, temperature, top_p, seed, context, token budgets (one per sweep)
+                  standard (8k)  long_fortress (8k, Fortress 16k)  pretrain (2k in 8k context)
+  settings.yaml   judge model/effort, local output paths, Modal infra
 vea/            library behind the four scripts
   config.py       YAML (with `extends:`) -> per-checkpoint job
   templates.py    pinned template, exact-string + one-token-swap assertions, token budgets
@@ -41,8 +44,11 @@ archive/v1/     as published: data/, figures/, and code/ (v1-only one-offs, kept
 outputs/        raw rollouts and labels (gitignored; large)
 ```
 
-A config describes an experiment: which model, the revision pattern (`step_{step:04d}`), the output
-key pattern, the template, sampling, and the list of `steps`. To add an experiment, copy a config.
+A **model config** says which checkpoints to load (`revision: "step_{step:04d}"` over `steps:`), which
+chat template replaces the branch's own (repo + pinned commit + the exact expected string), which
+dataset, and which sampling config it uses by default. A **sampling config** is shared by the whole
+sweep; `--sampling` overrides the default. Variants extend a model config, e.g. `rlvr_swap.yaml`
+is `extends: rlvr.yaml` plus `template: {name: swap, newline: true}`.
 
 ## Reproduce
 
@@ -59,9 +65,9 @@ for re-sampled steps, so it is skipped there and builds from `archive/v1/data`.
 
 Full pipeline (Modal + `OPENAI_API_KEY`):
 ```bash
-modal run sweep.py --config configs/rlvr_swap.yaml --preflight     # CPU: render + assert every prompt
-modal run --detach sweep.py --config configs/rlvr_swap.yaml        # sample all steps in the config
-python judge.py vea --config configs/rlvr_swap.yaml                # pull from the volume + judge
-python judge.py refusal --config configs/rlvr_swap.yaml
+modal run sweep.py --model rlvr_swap --preflight            # CPU: render + assert every prompt
+modal run --detach sweep.py --model rlvr_swap               # sample every step in the model config
+python judge.py vea --model rlvr_swap                       # pull from the volume + judge
+python judge.py refusal --model rlvr_swap
 python analyze.py build-data && python analyze.py figures
 ```

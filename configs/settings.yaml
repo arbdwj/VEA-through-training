@@ -1,0 +1,23 @@
+# Infrastructure + judge settings (not per-experiment).
+
+judge:
+  model: gpt-5-mini            # OpenAI API, OPENAI_API_KEY
+  reasoning_effort: low
+  workers: 64
+  max_consecutive_failures: 25 # circuit breaker (e.g. account blocked mid-run)
+  refusal_benchmarks: [fortress]
+
+paths:                         # local, relative to the repo root
+  raw: outputs/rerun_v2                 # generated rollouts, one <key>.jsonl per checkpoint
+  vea: outputs/rerun_v2_judgments       # VEA labels
+  refusal: outputs/rerun_v2_refusal     # refusal labels (+ joined VEA)
+
+modal:
+  app: olmo-vea-base
+  gpu: H100:2
+  timeout_hours: 5
+  weights_volume: olmo-weights
+  outputs_volume: olmo-outputs
+  hf_secret: huggingface-secret
+  progress_dict: vea-gen-progress
+  out_dir: /outputs/rerun_v2           # on the outputs volume; mirrors paths.raw

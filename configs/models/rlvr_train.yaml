@@ -1,0 +1,11 @@
+# Template-gap experiment: RLVR under the SFT training template.
+extends: rlvr.yaml
+stage: rlvr_traintmpl
+key: "rlvrtrain_step_{step:04d}"
+template:                      # SFT-branch training template: no system turn, model opens <think> itself
+  name: train
+  repo: allenai/Olmo-3-32B-Think-SFT
+  rev: 5e-5-step10000
+  system: null
+  think: false
+note: "template-gap: training template (no system, no <think>)"
