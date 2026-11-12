@@ -1,0 +1,19 @@
+stage: rlvr_swap
+lr: "na"
+model: allenai/Olmo-3.1-32B-Think
+revision: "step_{step:04d}"
+key: "rlvrswap_step_{step:04d}"
+steps: [50, 300, 550, 800, 1050, 1300, 1550, 1800, 2050, 2300]
+template:                         # replaces the checkpoint branch's own template; rendered prompt asserted
+  name: swap
+  repo: allenai/Olmo-3-32B-Think-DPO
+  rev: "97604023f2602a7dfe6d31b1fc229985e0002022"
+  system: You are a helpful AI assistant.
+  think: true                     # prompt ends with <think>
+  newline: true                   # append '\n' after the template (asserted: changes only the last token)
+dataset:                          # 444 prompts: 4 benchmarks + Fortress (ids prefixed fortress_)
+  bench: data/prompts/bench_prompts.jsonl
+  fortress: data/prompts/fortress_prompts.jsonl
+sampling: long_fortress           # default configs/sampling/<name>.yaml (override with --sampling)
+require_close_think: false        # judge only rollouts that close </think>
+note: "template-gap: one-token swap <think> -> <think>\\n"

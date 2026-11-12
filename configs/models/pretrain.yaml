@@ -1,18 +1,19 @@
-# Pretraining (stage 1) checkpoints of the base model. It has no chat template of its own.
 stage: pretrain
+lr: "na"
 model: allenai/Olmo-3-1125-32B
 revision: "stage1-step{step}"
 key: "pretrain_step{step:07d}"
 steps: [0, 80000, 155000, 228000, 301000, 371000, 444000, 517000, 585000, 656000]
-template:                      # replaces the checkpoint branch's own template; asserted per prompt
+template:                         # replaces the checkpoint branch's own template; rendered prompt asserted
   name: eval
   repo: allenai/Olmo-3-32B-Think-DPO
-  rev: 97604023f2602a7dfe6d31b1fc229985e0002022
+  rev: "97604023f2602a7dfe6d31b1fc229985e0002022"
   system: You are a helpful AI assistant.
-  think: true                  # prompt ends with <think>
-dataset:                       # 444 prompts: 4 benchmarks + Fortress (ids prefixed fortress_)
+  think: true                     # prompt ends with <think>
+  newline: false                  # append '\n' after the template (asserted: changes only the last token)
+dataset:                          # 444 prompts: 4 benchmarks + Fortress (ids prefixed fortress_)
   bench: data/prompts/bench_prompts.jsonl
   fortress: data/prompts/fortress_prompts.jsonl
-sampling: pretrain
-judge_require_close_think: true   # only rollouts that close </think> have a CoT to judge
-note: "pretraining checkpoint under the pinned eval template"
+sampling: pretrain                # default configs/sampling/<name>.yaml (override with --sampling)
+require_close_think: true         # judge only rollouts that close </think>
+note: "pretraining (stage 1) checkpoint of the base model"

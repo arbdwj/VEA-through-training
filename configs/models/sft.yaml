@@ -1,18 +1,19 @@
-# SFT checkpoints (lr 5e-5 run), steps 1k-10k.
 stage: sft
 lr: "5e-5"
 model: allenai/Olmo-3-32B-Think-SFT
 revision: "5e-5-step{step}"
 key: "sft_5e-5_step{step:05d}"
 steps: [1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000]
-template:                      # replaces the checkpoint branch's own template; asserted per prompt
+template:                         # replaces the checkpoint branch's own template; rendered prompt asserted
   name: eval
   repo: allenai/Olmo-3-32B-Think-DPO
-  rev: 97604023f2602a7dfe6d31b1fc229985e0002022
+  rev: "97604023f2602a7dfe6d31b1fc229985e0002022"
   system: You are a helpful AI assistant.
-  think: true                  # prompt ends with <think>
-dataset:                       # 444 prompts: 4 benchmarks + Fortress (ids prefixed fortress_)
+  think: true                     # prompt ends with <think>
+  newline: false                  # append '\n' after the template (asserted: changes only the last token)
+dataset:                          # 444 prompts: 4 benchmarks + Fortress (ids prefixed fortress_)
   bench: data/prompts/bench_prompts.jsonl
   fortress: data/prompts/fortress_prompts.jsonl
-sampling: standard
-note: "SFT checkpoint under the pinned eval template"
+sampling: standard                # default configs/sampling/<name>.yaml (override with --sampling)
+require_close_think: false        # judge only rollouts that close </think>
+note: "SFT checkpoint (lr 5e-5 run)"

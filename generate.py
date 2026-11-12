@@ -1,6 +1,6 @@
 """Generate rollouts for ONE checkpoint.
 
-  modal run generate.py --model rlvr_swap --step 2300
+  modal run generate.py --model rlvr --step 2300
   modal run generate.py --model sft --step 10000 --sampling long_fortress   # override the model's default sampling
   modal run generate.py --model sft --step 10000 --preflight               # CPU only: render + assert
 

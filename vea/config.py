@@ -1,13 +1,13 @@
 """Two kinds of config, plus infra settings:
 
-  configs/models/<name>.yaml     WHAT to run: model repo, revision pattern, steps, output key,
-                                 chat template, dataset, default sampling config
+  configs/models/<name>.yaml     WHAT to run: pretrain, sft, dpo, rlvr. Every model config has
+                                 exactly the same fields (MODEL_SCHEMA); the loader enforces it.
+  configs/temp/<name>.yaml       ancillary experiments (same schema), e.g. the template-gap runs
   configs/sampling/<name>.yaml   HOW to sample: n, temperature, top_p, seed, context, token budgets
   configs/settings.yaml          judge, local paths, Modal infra
 
-A model config may `extends: <other>.yaml` (deep merge; e.g. rlvr_swap only changes the template).
-`revision` and `key` are format strings over {step}. Configs can be given by name ("rlvr_swap")
-or by path.
+`revision` and `key` are format strings over {step}. A config is given by name ("rlvr",
+"temp/rlvr_swap") or by path.
 """
 from pathlib import Path
 
@@ -16,46 +16,42 @@ import yaml
 from vea import paths
 
 MODELS, SAMPLING = paths.CONFIGS / "models", paths.CONFIGS / "sampling"
-REQUIRED_MODEL = ("stage", "model", "revision", "key", "steps", "template", "dataset", "sampling")
+MODEL_SCHEMA = {"stage", "lr", "model", "revision", "key", "steps", "template", "dataset", "sampling",
+                "require_close_think", "note"}
+TEMPLATE_SCHEMA = {"name", "repo", "rev", "system", "think", "newline"}
+DATASET_SCHEMA = {"bench", "fortress"}
 REQUIRED_SAMPLING = ("n", "temperature", "top_p", "seed", "max_model_len", "max_new_tokens",
                      "prompt_overflow", "min_new_tokens")
-
-
-def _merge(base, over):
-    out = dict(base)
-    for k, v in over.items():
-        out[k] = _merge(out[k], v) if isinstance(v, dict) and isinstance(out.get(k), dict) else v
-    return out
 
 
 def _resolve(ref, folder):
     p = Path(ref)
     if p.is_file():
         return p
-    p = folder / (ref if str(ref).endswith(".yaml") else f"{ref}.yaml")
-    if not p.exists():
-        raise FileNotFoundError(f"no config {ref!r} (looked in {folder})")
-    return p
+    name = ref if str(ref).endswith(".yaml") else f"{ref}.yaml"
+    for base in (folder, paths.CONFIGS):          # "rlvr" -> models/rlvr.yaml; "temp/rlvr_swap" -> configs/temp/...
+        if (base / name).is_file():
+            return base / name
+    raise FileNotFoundError(f"no config {ref!r} (looked in {folder} and {paths.CONFIGS})")
 
 
 def _read(path):
-    cfg = yaml.safe_load(Path(path).read_text()) or {}
-    parent = cfg.pop("extends", None)
-    if parent:
-        cfg = _merge(_read(Path(path).parent / parent), cfg)
-    return cfg
+    return yaml.safe_load(Path(path).read_text()) or {}
 
 
-def _check(cfg, required, path):
-    missing = [k for k in required if k not in cfg]
-    if missing:
-        raise KeyError(f"{path}: missing {missing}")
+def _check(d, schema, where, exact=True):
+    missing, extra = schema - set(d), set(d) - schema
+    if missing or (exact and extra):
+        raise KeyError(f"{where}: " + (f"missing {sorted(missing)} " if missing else "")
+                       + (f"unexpected {sorted(extra)}" if exact and extra else ""))
 
 
 def load_model(ref):
     path = _resolve(ref, MODELS)
     cfg = _read(path)
-    _check(cfg, REQUIRED_MODEL, path)
+    _check(cfg, MODEL_SCHEMA, path)
+    _check(cfg["template"], TEMPLATE_SCHEMA, f"{path} template")
+    _check(cfg["dataset"], DATASET_SCHEMA, f"{path} dataset")
     cfg["_name"] = path.stem
     return cfg
 
@@ -63,7 +59,7 @@ def load_model(ref):
 def load_sampling(ref):
     path = _resolve(ref, SAMPLING)
     cfg = _read(path)
-    _check(cfg, REQUIRED_SAMPLING, path)
+    _check(cfg, set(REQUIRED_SAMPLING), path)
     cfg["_name"] = path.stem
     return cfg
 

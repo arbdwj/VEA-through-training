@@ -1,8 +1,0 @@
-# Template-gap experiment: RLVR under the one-token swap (<think> -> <think>\n).
-extends: rlvr.yaml
-stage: rlvr_swap
-key: "rlvrswap_step_{step:04d}"
-template:
-  name: swap
-  newline: true                # eval template + '\n': asserted to change exactly the last token
-note: "template-gap: one-token swap '<think>' -> '<think>\\n'"

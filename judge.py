@@ -1,7 +1,7 @@
 """Judge generated rollouts (gpt-5-mini; settings under `judge:` in the config).
 
-  python judge.py vea --model rlvr_swap                  # every step in configs/models/rlvr_swap.yaml
-  python judge.py vea --model rlvr_swap --steps 50,800
+  python judge.py vea --model rlvr                       # every step in configs/models/rlvr.yaml
+  python judge.py vea --model temp/rlvr_swap --steps 50,800
   python judge.py vea --keys sft_5e-5_step10000,rlvr_step_0050
   python judge.py vea                                    # every finished generation job
   python judge.py refusal --model rlvr                   # refusal (Fortress) + joined VEA
@@ -46,7 +46,7 @@ def vea(args, cfg):
     else:
         keys = _keys(args) or JG.finished_keys(cfg)
         tasks = {os.path.join(ROOT, cfg["paths"]["vea"], f"{k}.jsonl"): _rows(JG.pull(k, cfg, ROOT)) for k in keys}
-    if args.model and C.load_model(args.model).get("judge_require_close_think"):
+    if args.model and C.load_model(args.model)["require_close_think"]:
         # no CoT to judge -> VEA=False by construction, not written
         tasks = {p: [r for r in rows if "</think>" in r["completion"]] for p, rows in tasks.items()}
 

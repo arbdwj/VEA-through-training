@@ -19,13 +19,14 @@ v2 re-samples every affected checkpoint with one pinned template (`allenai/Olmo-
 ## Layout
 
 ```
-generate.py     one checkpoint      modal run generate.py --model rlvr_swap --step 2300 [--sampling long_fortress]
-sweep.py        range of ckpts      modal run --detach sweep.py --model rlvr_swap [--steps 50,800]
-judge.py        VEA / refusal       python judge.py vea --model rlvr_swap
+generate.py     one checkpoint      modal run generate.py --model rlvr --step 2300 [--sampling long_fortress]
+sweep.py        range of ckpts      modal run --detach sweep.py --model rlvr [--steps 50,800]
+judge.py        VEA / refusal       python judge.py vea --model rlvr
 analyze.py      analyses + figures  python analyze.py template-gap | figures | ...
 configs/
-  models/         WHAT: model repo, revision pattern, steps, output key, pinned template, dataset
-                  pretrain sft sft_merge dpo rlvr rlvr_swap rlvr_train
+  models/         WHAT: pretrain, sft, dpo, rlvr. Identical fields in every file (schema-checked):
+                  model, revision pattern, steps, output key, pinned template, dataset, default sampling
+  temp/           ancillary experiments, same schema: sft_merge, rlvr_swap, rlvr_train (template gap)
   sampling/       HOW: n, temperature, top_p, seed, context, token budgets (one per sweep)
                   standard (8k)  long_fortress (8k, Fortress 16k)  pretrain (2k in 8k context)
   settings.yaml   judge model/effort, local output paths, Modal infra
@@ -47,8 +48,8 @@ outputs/        raw rollouts and labels (gitignored; large)
 A **model config** says which checkpoints to load (`revision: "step_{step:04d}"` over `steps:`), which
 chat template replaces the branch's own (repo + pinned commit + the exact expected string), which
 dataset, and which sampling config it uses by default. A **sampling config** is shared by the whole
-sweep; `--sampling` overrides the default. Variants extend a model config, e.g. `rlvr_swap.yaml`
-is `extends: rlvr.yaml` plus `template: {name: swap, newline: true}`.
+sweep; `--sampling` overrides the default. Ancillary runs live in `configs/temp/` and are addressed as
+`--model temp/rlvr_swap`; they differ from `models/rlvr.yaml` only in `stage`, `key`, `template`, `note`.
 
 ## Reproduce
 
@@ -65,9 +66,9 @@ for re-sampled steps, so it is skipped there and builds from `archive/v1/data`.
 
 Full pipeline (Modal + `OPENAI_API_KEY`):
 ```bash
-modal run sweep.py --model rlvr_swap --preflight            # CPU: render + assert every prompt
-modal run --detach sweep.py --model rlvr_swap               # sample every step in the model config
-python judge.py vea --model rlvr_swap                       # pull from the volume + judge
-python judge.py refusal --model rlvr_swap
+modal run sweep.py --model rlvr --preflight                 # CPU: render + assert every prompt
+modal run --detach sweep.py --model rlvr                    # sample every step in the model config
+python judge.py vea --model rlvr                            # pull from the volume + judge
+python judge.py refusal --model rlvr
 python analyze.py build-data && python analyze.py figures
 ```
